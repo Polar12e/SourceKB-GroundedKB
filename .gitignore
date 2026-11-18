@@ -25,6 +25,7 @@ dist/
 .next/
 
 # Data / caches
+/data/private/
 .cache/
 _test_tmp/
 agent_eval*.json

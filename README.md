@@ -89,6 +89,7 @@ grounded-kb/
 ├─ scripts/
 │  ├─ goenv.sh                # Go 缓存重定向
 │  └─ check_contracts.py      # JSON Schema / OpenAPI 校验
+├─ data/                      # manifest 提交；private 语料忽略
 ├─ docs/
 │  ├─ architecture.md
 │  └─ migration-from-annual-report.md
@@ -105,7 +106,7 @@ grounded-kb/
 ├─ workers/                   # Python worker
 │  ├─ retrieval/              # BM25 + hit window + RRF
 │  ├─ embedding/              # 待建
-│  ├─ parser/                 # 待建
+│  ├─ parser/                 # PDF 解析 + 可选 OCR
 │  └─ eval/                   # 待建
 ├─ core/                      # 共享文本/切分（text.py 已落地）
 ├─ domains/
@@ -116,7 +117,7 @@ grounded-kb/
 └─ tests/                     # 跨服务测试（待建）
 ```
 
-当前已有 Go 服务骨架、Python retrieval 服务、契约 v0 草案、Compose/Dockerfile 与 CI 骨架；ingest、Agent 业务、benchmark 与 Web 待落地。
+当前已有 Go 服务骨架、Python retrieval 服务、契约 v0 草案、10 文档本地语料、Compose/Dockerfile 与 CI 骨架；ingest、Agent 业务、benchmark 与 Web 待落地。
 
 ---
 
@@ -128,12 +129,14 @@ grounded-kb/
 - [x] 旧项目资产盘点与迁移原则
 - [x] Go 服务骨架：gateway / ingest / agent / model-gateway + `/healthz`
 - [x] Python retrieval：BM25 + hit window + RRF + finance profile
+- [x] 10 文档本地语料：PDF parser + manifest + 页级 JSONL
 - [x] 契约 v0 草案：13 个 JSON Schema + OpenAPI（待评审冻结）
 - [x] Compose + Dockerfile 骨架（`config` 校验通过；未在会话内运行）
 - [x] CI 骨架
 - [ ] 契约 v0 评审冻结
 - [ ] dense / embedding 通道
-- [ ] 第一个 ingest pipeline
+- [ ] Xiaomi 3 份 OCR 重抽取
+- [ ] 第一个 ingest pipeline（数据库/索引服务）
 - [ ] Agent 业务、引用校验与拒答
 - [ ] 第一个 10 题 benchmark
 - [ ] 第一个 Web/API demo
@@ -169,6 +172,8 @@ make contracts
 
 RETRIEVAL_CORPUS=workers/retrieval/tests/fixtures/sample_pages.jsonl \
   make py-run-retrieval
+# 或使用已解析的 10 文档本地语料
+# RETRIEVAL_CORPUS=data/private/corpus/pages.jsonl make py-run-retrieval
 # 另开终端
 curl http://127.0.0.1:8081/healthz
 curl -X POST http://127.0.0.1:8081/search \
@@ -210,6 +215,7 @@ python -m eval.run --dataset finance_v1
 | [docs/task-log.md](docs/task-log.md) | 任务 backlog、会话记录、偏差与决策 |
 | [docs/architecture.md](docs/architecture.md) | 服务边界、契约、数据流 |
 | [contracts/README.md](contracts/README.md) | 契约 v0、字段约定、校验方式 |
+| [data/README.md](data/README.md) | 语料 manifest 与私有数据约定 |
 | [deploy/README.md](deploy/README.md) | Compose、Dockerfile、端口 |
 | [docs/migration-from-annual-report.md](docs/migration-from-annual-report.md) | 从旧年报项目迁移哪些资产 |
 

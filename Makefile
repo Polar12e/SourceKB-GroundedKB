@@ -95,7 +95,7 @@ py-install:
 	$(VENV)/bin/pip install -r requirements-dev.txt
 
 py-test:
-	$(PYTHON) -m pytest workers/retrieval/tests
+	$(PYTHON) -m pytest workers
 
 contracts:
 	$(PYTHON) scripts/check_contracts.py

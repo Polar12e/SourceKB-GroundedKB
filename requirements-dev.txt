@@ -1,3 +1,4 @@
 -r workers/retrieval/requirements-dev.txt
+-r workers/parser/requirements.txt
 jsonschema>=4.23,<5
 PyYAML>=6,<7

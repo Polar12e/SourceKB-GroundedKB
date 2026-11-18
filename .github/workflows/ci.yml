@@ -43,7 +43,7 @@ jobs:
       - name: Contract checks
         run: python scripts/check_contracts.py
       - name: Retrieval worker tests
-        run: python -m pytest workers/retrieval/tests
+        run: python -m pytest workers
 
   compose:
     name: Compose config
