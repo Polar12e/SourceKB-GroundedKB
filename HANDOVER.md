@@ -259,7 +259,7 @@ Go 服务骨架已落地；契约、Python worker 与 Compose 尚未落地。
 
 ## 8. 需要确认的问题
 
-1. 新仓库远程地址：已确认 `https://github.com/Polar12e/SourceKB-GroundedKB`（push 待 GitHub 认证）；
+1. 新仓库远程地址：已确认 `https://github.com/Polar12e/SourceKB-GroundedKB`，`main` 已推送；
 2. 第一个 finance vertical 的文档范围（仅年报？公告？审计报告？）；
 3. 向量库选型：Milvus / pgvector / OpenSearch；
 4. 是否第一步就做 Web，还是先 API + CLI；

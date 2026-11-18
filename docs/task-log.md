@@ -149,6 +149,13 @@
 - `core.sshCommand` 使用 `-F /dev/null` 绕开系统 SSH 配置权限错误，known_hosts 放在 `.tools/ssh/known_hosts`。
 - 当前仍是 `Permission denied (publickey)`：公钥尚未加入 GitHub；添加后即可 `git push -u origin main`。
 
+### 2026-11-18 17:43 · SSH 推送成功
+
+- SSH 认证成功：`Hi Polar12e! You've successfully authenticated...`。
+- `git push -u origin main` 成功；本地 `main` 已跟踪 `origin/main`，工作树干净。
+- 远程仓库：`ssh://ssh.github.com:443/Polar12e/SourceKB-GroundedKB.git`。
+- D7 解除；T0.1 的 push 待办完成。后续提交直接 `git push`。
+
 ---
 
 ## 2. 工作区清单（已读）
@@ -184,7 +191,7 @@
 | D4 | `.env.example` 仍使用旧项目前缀 `FIN_AGENT_*`，未定义 temperature，端口与服务名也未对齐新架构 | 配置继承旧命名，后续 model gateway/agent 的边界不清 | T0.11：确定新前缀（建议 `GROUNDEDKB_*`），补 temperature/超时/端点白名单；如需兼容旧变量，记录映射关系 |
 | D5 | `contracts/` 无任何契约文件，而文档要求“契约评审通过后再写服务” | 直接写代码会破坏契约优先原则，多语言联调返工 | T0.3 → T0.4 → T0.5，先冻结 v0 契约 |
 | D6 | Go 1.27.4 已装，但默认 `GOCACHE=/home/polarize/.cache/go-build`、`GOPATH=/home/polarize/go` 在沙箱内只读，直接 `go run` / `go build` 报 `read-only file system`（已缓解） | 代码可编译但命令需额外环境变量；本地与 CI 行为不一致 | 已由 `scripts/goenv.sh` + Makefile 重定向到 `.tools/`；直接执行 `go` 前先 source（T0.13） |
-| D7 | HTTPS 无凭据；SSH key 已生成但未加入 GitHub（`Permission denied (publickey)`） | 首次提交未同步到远程，缺少异地备份与 CI 触发 | 把 `.tools/ssh/id_ed25519.pub` 加入 GitHub 后推送（T0.1） |
+| D7 | 已解决（17:43）：SSH key 已登记，`main` 已推送；HTTPS 仍无凭据，但不再阻塞 | — | 后续使用 `git push`（SSH 443） |
 
 ---
 
@@ -197,7 +204,7 @@
 | ID | 任务 | 状态 | 验收 / 备注 |
 |---|---|---|---|
 | T0.0 | 阅读工作区并建立任务日志 | `DONE` | 本文件；README/HANDOVER 已加链接 |
-| T0.1 | 初始化 Git 仓库、复核 `.gitignore`、首次提交 | `DONE` | 本地完成：`main` + `eac5219`；remote 已配置；push 待 SSH 公钥授权（D7） |
+| T0.1 | 初始化 Git 仓库、复核 `.gitignore`、首次提交 | `DONE` | 本地 + 远程完成：`main` + `eac5219` 已推送；SSH 443 可用 |
 | T0.2 | 统一旧项目与迁移文档的相对路径（D1） | `TODO` | 取决于目标仓库布局决策 |
 | T0.3 | 编写契约 JSON Schema：`Document` / `Chunk` / `SearchRequest` / `SearchHit` / `Answer` / `Citation` / `EvalCase` / `EvalResult` | `TODO` | 放入 `contracts/`；字段与 `docs/architecture.md` §4 对齐 |
 | T0.4 | 编写 OpenAPI：Gateway / Agent / Retrieval 端点 | `TODO` | 依赖 T0.3；至少 `/documents`、`/ask`、`/search`、`/healthz` |
@@ -303,7 +310,7 @@
 
 | ID | 问题 | 状态 |
 |---|---|---|
-| Q1 | 新仓库远程地址/组织名 | 已确认：https://github.com/Polar12e/SourceKB-GroundedKB（SSH remote 已配置，待公钥授权） |
+| Q1 | 新仓库远程地址/组织名 | 已确认并推送：https://github.com/Polar12e/SourceKB-GroundedKB |
 | Q2 | 第一个 finance vertical 的文档范围（仅年报？公告？审计报告？） | 未确认 |
 | Q3 | 向量库选型：Milvus / pgvector / OpenSearch | 未确认 |
 | Q4 | 第一步做 Web，还是先 API + CLI | 未确认 |
@@ -314,11 +321,11 @@
 
 ## 8. 下一步（按顺序）
 
-1. **完成 Git 推送**：把 `.tools/ssh/id_ed25519.pub` 加入 GitHub，然后执行 `git push -u origin main`；SSH remote 已配置（Q1 已确认）。
-2. **确认 Docker 访问**：在宿主机终端执行 `docker info` 与 `docker run --rm hello-world`；Go 环境已固化（`make test`），Docker 仍是 M0 唯一环境阻塞（D3/T0.13）。
-3. **写契约 v0**：先定 `Document`、`Chunk`、`SearchHit`、`Citation`、`EvalCase`（T0.3），再补 OpenAPI（T0.4）。
-4. **契约评审并冻结**（T0.5）；通过后并行建 Go/Python 骨架与 Compose（T0.6–T0.8）。
-5. **准备 M1 baseline**：用旧项目检索跑 10 题，把指标和命令留档（T1.3），作为新服务的对比基准。
+1. **确认 Docker 访问**：在宿主机终端执行 `docker info` 与 `docker run --rm hello-world`；Go 环境已固化（`make test`），Docker 仍是 M0 唯一环境阻塞（D3/T0.13）。
+2. **写契约 v0**：先定 `Document`、`Chunk`、`SearchHit`、`Citation`、`EvalCase`（T0.3），再补 OpenAPI（T0.4）。
+3. **契约评审并冻结**（T0.5）；通过后补 Python retrieval worker 骨架与 Compose（T0.7/T0.8）。
+4. **准备 M1 baseline**：用旧项目检索跑 10 题，把指标和命令留档（T1.3），作为新服务的对比基准。
+5. **进入 M1 检索切片**：10 文档入库、`/search` locator、10 题 retrieval eval（T1.4–T1.7）。
 
 ---
 
@@ -329,7 +336,7 @@
 | R1 | 沙箱限制 | M0 无法验收 | Docker 已装但沙箱无法连接 socket；Go 缓存已重定向 | 宿主机终端验证 Compose（D3） |
 | R2 | 文档路径漂移 | 接手人找不到旧项目/迁移方案 | D1 | 统一布局后一次性修文档，并加检查 |
 | R3 | 语料/PDF 许可 | 仓库无法公开 | 旧项目含 452 页 corpus | 只存 manifest/hash 或样例；入库前确认许可 |
-| R4 | 远程未备份 | 本地提交无法在 GitHub 恢复；CI 未触发 | SSH key 未加入 GitHub，push 未完成 | 添加公钥后推送（D7/T0.1） |
+| R4 | SSH 私钥丢失/泄露 | 无法推送，或 key 被滥用 | 私钥在 `.tools/ssh`，无 passphrase，未纳入 Git | 不要删除/提交；必要时重新生成并撤销旧 key |
 | R5 | Gold Evidence 标注成本 | benchmark 不可信 | 100 题目标 | 先 20 题双人核对，再扩量 |
 | R6 | 过早平台化 | 切片交付不了 | 目录/文档已覆盖 M4 | 先 M0/M1 单垂直，平台能力按 benchmark 需求引入 |
 | R7 | 文档与实现漂移 | 交接状态失真 | README §5 状态表需随代码更新 | 每次合并更新 README §5 与本日志 |
