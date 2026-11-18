@@ -103,20 +103,20 @@ grounded-kb/
 │  └─ model-gateway/
 ├─ internal/                  # Go 共享平台包（config/health/httpserver/service）
 ├─ workers/                   # Python worker
-│  ├─ retrieval/              # 骨架：/healthz；/search 501
+│  ├─ retrieval/              # BM25 + hit window + RRF
 │  ├─ embedding/              # 待建
 │  ├─ parser/                 # 待建
 │  └─ eval/                   # 待建
-├─ core/                      # 可复用的算法与协议（待建）
+├─ core/                      # 共享文本/切分（text.py 已落地）
 ├─ domains/
-│  └─ finance/                # 第一个 vertical（待建）
+│  └─ finance/                # finance 检索 profile（部分落地）
 ├─ deploy/                    # Compose + Dockerfile（骨架）
 │  ├─ compose.yaml
 │  └─ docker/go-service.Dockerfile
 └─ tests/                     # 跨服务测试（待建）
 ```
 
-当前已有 Go 服务骨架、Python retrieval 骨架、契约 v0 草案、Compose/Dockerfile 与 CI 骨架；检索算法、ingest、Agent 业务与 Web 待落地。
+当前已有 Go 服务骨架、Python retrieval 服务、契约 v0 草案、Compose/Dockerfile 与 CI 骨架；ingest、Agent 业务、benchmark 与 Web 待落地。
 
 ---
 
@@ -127,12 +127,12 @@ grounded-kb/
 - [x] 架构文档
 - [x] 旧项目资产盘点与迁移原则
 - [x] Go 服务骨架：gateway / ingest / agent / model-gateway + `/healthz`
+- [x] Python retrieval：BM25 + hit window + RRF + finance profile
 - [x] 契约 v0 草案：13 个 JSON Schema + OpenAPI（待评审冻结）
-- [x] Python retrieval 骨架：`/healthz`；`/search` 暂返回 501
 - [x] Compose + Dockerfile 骨架（`config` 校验通过；未在会话内运行）
 - [x] CI 骨架
 - [ ] 契约 v0 评审冻结
-- [ ] 检索算法迁移（BM25 / dense / RRF / hit window）
+- [ ] dense / embedding 通道
 - [ ] 第一个 ingest pipeline
 - [ ] Agent 业务、引用校验与拒答
 - [ ] 第一个 10 题 benchmark
@@ -142,7 +142,7 @@ grounded-kb/
 
 ## 6. 快速开始
 
-当前可运行 Go 服务与 Python retrieval 骨架；Compose 文件可校验，但真正 `up` 需要宿主机可访问 Docker socket。
+当前可运行 Go 服务与 Python retrieval 服务；Compose 文件可校验，但真正 `up` 需要宿主机可访问 Docker socket。
 
 Go 服务：
 
@@ -166,10 +166,14 @@ Python retrieval：
 make py-install
 make py-test
 make contracts
-make py-run-retrieval
+
+RETRIEVAL_CORPUS=workers/retrieval/tests/fixtures/sample_pages.jsonl \
+  make py-run-retrieval
 # 另开终端
 curl http://127.0.0.1:8081/healthz
-# /search 当前返回 501，待迁移检索算法
+curl -X POST http://127.0.0.1:8081/search \
+  -H 'content-type: application/json' \
+  -d '{"query":"营业成本重述","top_k":3}'
 ```
 
 Compose：

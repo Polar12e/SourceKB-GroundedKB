@@ -9,6 +9,8 @@ COPY workers/retrieval/requirements.txt ./requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY workers /app/workers
+COPY core /app/core
+COPY domains /app/domains
 
 EXPOSE 8081
 

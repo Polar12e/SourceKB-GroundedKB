@@ -3,14 +3,14 @@
 > 项目名：高保真知识库（GroundedKB）  
 > 定位：可溯源的 Agentic RAG 知识库平台  
 > 技术栈：Go + Python  
-> 状态：**Go/Python 骨架与契约 v0 草案已落地；检索/Agent 业务待实现**  
+> 状态：**Go/Python 骨架、BM25 检索与契约 v0 草案已落地；Agent/ingest 待实现**  
 > 创建日期：2026-11-18
 
 ---
 
 ## 1. 交接摘要
 
-当前目录是 GroundedKB 的新项目起点，Go 骨架与 Python retrieval 骨架可运行，但还不是完整系统。
+当前目录是 GroundedKB 的新项目起点，Go 骨架与 Python retrieval 服务可运行，但还不是完整系统。
 
 已完成：
 
@@ -21,7 +21,7 @@
 - 旧项目资产迁移清单；
 - 风险与里程碑；
 - Go 服务骨架（gateway / ingest / agent / model-gateway + `/healthz`）；
-- Python retrieval 骨架（`/healthz`；`/search` 暂返回 501）；
+- Python retrieval：BM25 + hit window + RRF + finance profile（`/search` 可用）；
 - 契约 v0 草案（13 个 JSON Schema + OpenAPI）；
 - Compose / Dockerfile 骨架（`config` 校验通过，未在会话内运行）；
 - CI 骨架。
@@ -29,7 +29,7 @@
 未完成：
 
 - 契约 v0 评审与冻结；
-- Python 检索算法迁移；
+- dense / embedding 通道；
 - ingest pipeline；
 - benchmark；
 - Web/API。
@@ -196,15 +196,15 @@ grounded-kb/
 │  ├─ embedding/              # 待建
 │  ├─ parser/                 # 待建
 │  └─ eval/                   # 待建
-├─ core/                      # 算法/协议
-├─ domains/finance/           # 第一个 vertical
+├─ core/                      # 算法/协议（text.py 已落地）
+├─ domains/finance/           # finance profile（部分落地）
 ├─ deploy/
 │  ├─ compose.yaml
 │  └─ docker/go-service.Dockerfile
 └─ tests/
 ```
 
-Go/Python 骨架与契约草案已落地；检索算法、ingest、Agent 业务与 Compose 运行待补。
+Go/Python 骨架、BM25 检索与契约草案已落地；dense、ingest、Agent 业务与 Compose 运行待补。
 
 ---
 

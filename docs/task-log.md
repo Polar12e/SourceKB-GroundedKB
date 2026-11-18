@@ -180,6 +180,28 @@
 - `docker compose up` 未运行（D3 沙箱限制）。
 - 检索算法、ingest、Agent、benchmark 未实现。
 
+### 2026-11-18 18:42 · T1.2 检索迁移
+
+**新增**
+
+- `core/text.py`：数字归一化、中文 bigram、行切分。
+- `workers/retrieval/`：`chunking.py`、`windows.py`、`index.py`、`fusion.py`、`corpus.py`；BM25、hit window、RRF、JSONL corpus 加载。
+- `domains/finance/retrieval.py`：旧 `bm25` 的 ratio/restatement 查询扩展 + 报表页 +18 加分。
+- `app.py`：`/search` 返回 200 `SearchResponse`，支持 `RETRIEVAL_CORPUS`；`section` 为空时省略。
+- 测试 30 项（含 API↔JSON Schema 契约校验）；合成 fixture `sample_pages.jsonl`。
+
+**基线核对**
+
+- 在新索引上跑旧 corpus：1450 chunks / 452 pages，构建约 0.11s。
+- q01–q08 的页面顺序与旧 `bm25` baseline 一致；q01 命中 `legacy:p199:c0`，窗口 1–18 行；q03/q04/q06/q07/q08 首位页面均正确。
+- q02 为 `[126, 199, 355, ...]`，与旧 `bm25` 一致；期望页 199 在 top 3。
+
+**未做**
+
+- 正式 10 题指标与命令留档（T1.3/T1.7）。
+- dense/embedding 通道；完整口语词表（`src/lexicon.py`）尚未迁移。
+- ingest pipeline。
+
 ---
 
 ## 2. 工作区清单（已读）
@@ -192,16 +214,16 @@
 | [docs/migration-from-annual-report.md](migration-from-annual-report.md) | 旧项目资产分级（A–D）、迁移顺序、不要照抄的部分、验收问题 | 设计稿 |
 | [contracts/README.md](../contracts/README.md) | 契约 v0：JSON Schema / OpenAPI / 示例 | 草案已落地，待评审 |
 | [services/README.md](../services/README.md) | Go 服务边界与优先级 | 说明文件；Go 骨架已落地 |
-| [workers/README.md](../workers/README.md) | Python worker 职责与复用来源 | retrieval 骨架已落地 |
-| [core/README.md](../core/README.md) | 跨 domain 算法与协议范围 | 占位，无代码 |
-| [domains/finance/README.md](../domains/finance/README.md) | finance vertical 迁移范围 | 占位，无代码 |
+| [workers/README.md](../workers/README.md) | Python worker 职责与复用来源 | BM25 已落地 |
+| [core/README.md](../core/README.md) | 跨 domain 算法与协议范围 | `text.py` 已落地 |
+| [domains/finance/README.md](../domains/finance/README.md) | finance vertical 迁移范围 | retrieval profile 已落地 |
 | [eval/README.md](../eval/README.md) | benchmark 目标、题目字段、指标 | 占位，无实现 |
 | [deploy/README.md](../deploy/README.md) | Compose、Dockerfile、端口 | 骨架已落地；未运行 |
 | [tests/README.md](../tests/README.md) | unit/contract/integration/eval/smoke 分层 | 占位，无测试 |
 | [.env.example](../.env.example) | 本地配置占位（仍为 `FIN_AGENT_*` 前缀） | 待整理（D4） |
 | [.gitignore](../.gitignore) | 已忽略 `.env`、缓存、构建产物、评测输出、`*.npz` | 可用 |
 
-截至 2026-11-18 17:50，`contracts/`、`workers/retrieval/`、`deploy/`、`.github/workflows/` 已落地；`core/`、`domains/finance/`、`eval/`、`tests/` 仍为占位。工作区当前还有 `go.mod`、`Makefile`、`requirements-dev.txt`、`.dockerignore`、`.tools/`（缓存）、`.venv/`（Python 依赖）和 `bin/`（构建产物），后三者已忽略。
+截至 2026-11-18 18:42，`core/text.py`、`domains/finance/retrieval.py`、`workers/retrieval/`、`contracts/`、`deploy/`、`.github/workflows/` 已落地；`eval/`、`tests/` 仍为占位。工作区当前还有 `go.mod`、`Makefile`、`requirements-dev.txt`、`.dockerignore`、`.tools/`（缓存）、`.venv/`（Python 依赖）和 `bin/`（构建产物），后三者已忽略。
 
 ---
 
@@ -217,7 +239,8 @@
 | D6 | Go 1.27.4 已装，但默认 `GOCACHE=/home/polarize/.cache/go-build`、`GOPATH=/home/polarize/go` 在沙箱内只读，直接 `go run` / `go build` 报 `read-only file system`（已缓解） | 代码可编译但命令需额外环境变量；本地与 CI 行为不一致 | 已由 `scripts/goenv.sh` + Makefile 重定向到 `.tools/`；直接执行 `go` 前先 source（T0.13） |
 | D7 | 已解决（17:43）：SSH key 已登记，`main` 已推送；HTTPS 仍无凭据，但不再阻塞 | — | 后续使用 `git push`（SSH 443） |
 | D8 | 契约 v0 已起草但未评审冻结 | 字段/端点仍可能变，先扩业务会返工 | T0.5：记录评审意见后冻结 v0 |
-| D9 | retrieval `/search` 返回 501 | M1 检索链路不可用；Compose 只能验证存活 | T1.2 迁移 BM25/RRF，并用 T1.3 baseline 对比 |
+| D9 | 已解决（18:42）：`/search` 返回 BM25 hits；q01–q08 页面顺序与旧 `bm25` 一致 | — | dense 通道见 D10 |
+| D10 | dense / embedding 通道未迁移；API 目前只用 BM25 单通道 | hybrid 与语义召回不可用 | `workers/embedding` 建立后接入 `HybridIndex` |
 
 ---
 
@@ -236,7 +259,7 @@
 | T0.4 | 编写 OpenAPI：Gateway / Agent / Retrieval 端点 | `DONE` | OpenAPI 3.1；`/healthz`、`/documents`、`/search`、`/ask`；外部 `$ref` 已校验 |
 | T0.5 | 契约评审并冻结 v0 | `TODO` | 草案已产出；需评审记录（D8），冻结后才能扩业务接口 |
 | T0.6 | Go 服务骨架：`gateway` / `ingest` / `agent` / `model-gateway`，含 `/healthz` 与单测 | `DONE` | `make test` 4 个含测试包通过、`make vet` 通过、`make build` 四服务；`/healthz` 实测；D6 已由脚本处理 |
-| T0.7 | Python retrieval worker 骨架（FastAPI + `/healthz` + pytest） | `DONE` | 4 个 pytest 通过；`/search` 显式返回 501；运行时 health 200 |
+| T0.7 | Python retrieval worker 骨架（FastAPI + `/healthz` + pytest） | `DONE` | 初始 4 个 pytest；T1.2 后扩展为 30 个测试、`/search` 已实现 |
 | T0.8 | Docker Compose：Postgres + Redis + retrieval + gateway + 健康检查 | `DOING` | 7 服务 compose + Dockerfile；`config` 通过；`up` 受 D3 阻塞 |
 | T0.9 | README 快速开始与 Makefile/脚本对齐，确保 `docker compose up` 可跑 | `DOING` | README/Makefile 已更新；`up` 未在会话内验证 |
 | T0.10 | CI 骨架：Go test、Python pytest、契约校验 | `DONE` | `.github/workflows/ci.yml` 含 3 个 job；待首次远程 CI 运行 |
@@ -251,11 +274,11 @@
 | ID | 任务 | 状态 | 验收 / 备注 |
 |---|---|---|---|
 | T1.1 | 将旧项目 32 题 `questions.json` 迁为 `EvalCase` schema，补 `gold_evidence` | `TODO` | 先 10 题可跑，再补全 32 题 |
-| T1.2 | 迁移 `retrieval.py`：chunking / BM25 / hit window / RRF，`page` → `locator` | `TODO` | 放 `core/retrieval` + `workers/retrieval`；`chunk_id` 稳定 |
-| T1.3 | 用旧项目检索跑 10 题 baseline，留档指标与命令 | `TODO` | 新服务必须与这份 baseline 对比，避免“重写后不可比” |
+| T1.2 | 迁移 `retrieval.py`：chunking / BM25 / hit window / RRF，`page` → `locator` | `DONE` | 30 测试；q01–q08 与旧 `bm25` 页面顺序一致；finance profile 独立 |
+| T1.3 | 用旧项目检索跑 10 题 baseline，留档指标与命令 | `DOING` | 已核对 q01–q08 页面顺序；正式 10 题指标/命令待补 |
 | T1.4 | Parser：PDF → 页/行 JSONL，生成 manifest 与 `sha256` | `TODO` | 先 PDF；HTML/DOCX 后续 |
 | T1.5 | 10 份文档入库：解析、chunk、metadata、索引 | `TODO` | 需先定语料许可（R3） |
-| T1.6 | `POST /search` 返回 `document_id/page/line_start/line_end/score/matched_terms` | `TODO` | 契约见 T0.3/T0.4 |
+| T1.6 | `POST /search` 返回 `document_id/page/line_start/line_end/score/matched_terms` | `DONE` | 支持 `RETRIEVAL_CORPUS`；响应通过契约校验；ingest 后接动态索引 |
 | T1.7 | 新服务 10 题 retrieval eval，与 T1.3 baseline 对比 | `TODO` | 输出 Markdown 报告；记录 Hit@4/Recall@4/MRR |
 
 ### M2：Agent + 引用
@@ -299,7 +322,7 @@
 | 里程碑 | 验收标准 | 状态 | 主要依赖 |
 |---|---|---|---|
 | M0 契约与骨架 | `docker compose up` 可启动；`/healthz` 可用 | 进行中 | T0.5、T0.8；D3 沙箱 |
-| M1 检索切片 | 10 文档/10 题；Hit@4、Recall@4 baseline；页面/行号可回链 | 未开始 | M0；T1.3 baseline |
+| M1 检索切片 | 10 文档/10 题；Hit@4、Recall@4 baseline；页面/行号可回链 | 进行中 | T1.3 baseline、T1.4/T1.5 ingest、T1.7 eval |
 | M2 Agent + 引用 | 10–20 题端到端；引用可核对；无证据拒答 | 未开始 | M1；T2.1–T2.6 |
 | M3 100 文档/100 题 | 100 题 Gold Evidence；四种方案对比报告 | 未开始 | M2；T3.1–T3.4 |
 | M4 平台化 | 异步 ingest、索引重建、观测、基础 Web | 未开始 | M3 |
@@ -349,9 +372,9 @@
 
 1. **确认 Docker 访问**：在宿主机终端执行 `docker info`、`docker run --rm hello-world`，再跑 `docker compose -f deploy/compose.yaml up --build`；这是 M0 唯一环境阻塞（D3/T0.8）。
 2. **评审并冻结契约 v0**（T0.5）：按 `contracts/README.md` 的待评审问题逐项确认，记录评审意见后冻结（D8）。
-3. **准备 M1 baseline**：用旧项目检索跑 10 题，把指标和命令留档（T1.3），作为新服务的对比基准。
-4. **迁移检索算法**：把 BM25 / hit window / RRF 从旧项目迁到 `workers/retrieval`，实现 `/search` 并保留 `chunk_id` 稳定（T1.2/T1.6）。
-5. **进入 ingest 与 M1 评测**：PDF 解析、10 文档入库、10 题 retrieval eval 与 baseline 对比（T1.4/T1.5/T1.7）。
+3. **完成正式 baseline**：用旧项目检索跑 10 题，把 Hit@4/Recall@4/MRR 与命令留档（T1.3）；新服务已核对 q01–q08 页面顺序。
+4. **做 ingest**：PDF → 页/行 JSONL，10 文档入库并生成 manifest/hash（T1.4/T1.5）；索引从 `RETRIEVAL_CORPUS` 转为 ingest 写入。
+5. **做 M1 评测**：新服务 10 题 retrieval eval 与 baseline 对比（T1.7）；之后再接 dense/embedding 与 RRF 多通道（D10）。
 
 ---
 

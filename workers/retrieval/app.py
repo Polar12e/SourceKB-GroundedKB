@@ -1,15 +1,22 @@
-"""GroundedKB retrieval service skeleton.
+"""GroundedKB retrieval service.
 
-The real BM25/dense/RRF implementation is migrated from the legacy project in
-T1.2. Until then /search returns 501 and only /healthz is live.
+The BM25 / hit-window / RRF algorithm is ported from the legacy project in
+T1.2. The service loads a JSONL corpus when ``RETRIEVAL_CORPUS`` is set;
+without a corpus the API returns an empty result set rather than fake hits.
 """
 
 from __future__ import annotations
 
-from fastapi import FastAPI, HTTPException
+import os
+from pathlib import Path
+
+from fastapi import FastAPI
 from pydantic import BaseModel, Field
 
-app = FastAPI(title="GroundedKB Retrieval", version="0.1.0")
+from domains.finance.retrieval import FinanceRetrievalProfile
+
+from .corpus import load_pages_jsonl
+from .index import BM25Index
 
 
 class Health(BaseModel):
@@ -43,13 +50,40 @@ class SearchResponse(BaseModel):
     hits: list[SearchHit] = Field(default_factory=list)
 
 
-@app.get("/healthz", response_model=Health, tags=["system"])
-def healthz() -> Health:
-    return Health()
+def _default_index() -> BM25Index:
+    corpus = os.getenv("RETRIEVAL_CORPUS")
+    if not corpus:
+        return BM25Index.from_pages([], profile=FinanceRetrievalProfile())
+    return BM25Index.from_pages(
+        load_pages_jsonl(Path(corpus)),
+        profile=FinanceRetrievalProfile(),
+    )
 
 
-@app.post("/search", response_model=SearchResponse, tags=["retrieval"])
-def search(request: SearchRequest) -> SearchResponse:
-    # Keep the contract endpoint live while the legacy retrieval algorithm is
-    # being migrated. Callers get an explicit 501 instead of fake hits.
-    raise HTTPException(status_code=501, detail="retrieval migration pending")
+def create_app(index: BM25Index | None = None) -> FastAPI:
+    """Build the app; tests inject an index, production reads the environment."""
+
+    active = index if index is not None else _default_index()
+    application = FastAPI(title="GroundedKB Retrieval", version="0.1.0")
+    application.state.index = active
+
+    @application.get("/healthz", response_model=Health, tags=["system"])
+    def healthz() -> Health:
+        return Health()
+
+    @application.post(
+        "/search",
+        response_model=SearchResponse,
+        response_model_exclude_none=True,
+        tags=["retrieval"],
+    )
+    def search(request: SearchRequest) -> SearchResponse:
+        hits = active.search(request.query, top_k=request.top_k)
+        return SearchResponse(
+            hits=[SearchHit(**hit.to_contract()) for hit in hits]
+        )
+
+    return application
+
+
+app = create_app()
