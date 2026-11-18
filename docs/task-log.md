@@ -133,6 +133,15 @@
 - 未实现业务接口（`/documents`、`/ask`、`/search`），等待契约 v0。
 - 未初始化 Git；Docker 仍不可从会话访问。
 
+### 2026-11-18 17:37 · Git 初始化与首次提交
+
+- 远程仓库：`https://github.com/Polar12e/SourceKB-GroundedKB`（空仓库，0 refs）。
+- `git init -b main`；仓库级身份 `Zhang <2122163720@qq.com>`。
+- 30 个文件暂存；`.tools/`、`bin/`、`.env` 被 `.gitignore` 忽略；密钥扫描无命中。
+- 首次提交 `eac5219 chore: bootstrap GroundedKB Go service skeleton`，工作树干净。
+- `origin` 已配置；`git push -u origin main` 因本机无 GitHub 凭据失败（`could not read Username`）；无 credential helper，SSH agent 无 key。
+- 待办：在宿主机终端完成 GitHub 认证后推送；推送前可考虑把 module path 改为正式仓库路径。
+
 ---
 
 ## 2. 工作区清单（已读）
@@ -163,11 +172,12 @@
 | ID | 现象 | 影响 | 建议处置 |
 |---|---|---|---|
 | D1 | README/HANDOVER/迁移文档引用 `../annual-report-qa-agent` 与 `../TRANSITION_PLAN.md`；实际位于 `../nianbao/` 下 | 接手人按文档路径找不到旧项目与迁移方案 | 先确认目标仓库布局：若维持当前嵌套，统一改为 `../nianbao/...`；若计划迁为兄弟目录，迁移后再改。两者取其一，避免长期漂移 |
-| D2 | `grounded-kb/` 不是 Git 仓库 | 变更无历史、无法打 tag/回滚，也不符合“独立仓库”的迁移原则 | T0.1：本地 `git init` + 首次提交；remote 待 Q1 确认 |
+| D2 | 已解决（17:37）：已初始化 `main` 并提交 `eac5219`；remote 已配置，push 待认证 | 变更已有历史；推送前仍无远程备份 | 完成 GitHub 认证后 `git push -u origin main`（D7） |
 | D3 | Docker CE 29.10 + Compose v5.8 已安装且 systemd active，但当前 DSH bwrap 沙箱剥离 docker 组权限，无法连接 `/var/run/docker.sock`（`sg` / `setpriv` / `sudo` / `danger-full-access` 均失败）；无 rootless socket 或 TCP 入口 | `docker compose up` 无法在本会话验收；Postgres/Redis/服务容器无法启动 | 在宿主机终端运行 Docker/Compose，或为会话开放 socket 访问；Compose 文件可先写，验收放到宿主机 |
 | D4 | `.env.example` 仍使用旧项目前缀 `FIN_AGENT_*`，未定义 temperature，端口与服务名也未对齐新架构 | 配置继承旧命名，后续 model gateway/agent 的边界不清 | T0.11：确定新前缀（建议 `GROUNDEDKB_*`），补 temperature/超时/端点白名单；如需兼容旧变量，记录映射关系 |
 | D5 | `contracts/` 无任何契约文件，而文档要求“契约评审通过后再写服务” | 直接写代码会破坏契约优先原则，多语言联调返工 | T0.3 → T0.4 → T0.5，先冻结 v0 契约 |
 | D6 | Go 1.27.4 已装，但默认 `GOCACHE=/home/polarize/.cache/go-build`、`GOPATH=/home/polarize/go` 在沙箱内只读，直接 `go run` / `go build` 报 `read-only file system`（已缓解） | 代码可编译但命令需额外环境变量；本地与 CI 行为不一致 | 已由 `scripts/goenv.sh` + Makefile 重定向到 `.tools/`；直接执行 `go` 前先 source（T0.13） |
+| D7 | 本机无 GitHub PAT / credential helper / SSH key，`git push` 报 `could not read Username` | 首次提交未同步到远程，缺少异地备份与 CI 触发 | 在宿主机终端用 PAT 或 SSH 完成一次认证，再推送（T0.1） |
 
 ---
 
@@ -180,7 +190,7 @@
 | ID | 任务 | 状态 | 验收 / 备注 |
 |---|---|---|---|
 | T0.0 | 阅读工作区并建立任务日志 | `DONE` | 本文件；README/HANDOVER 已加链接 |
-| T0.1 | 初始化 Git 仓库、复核 `.gitignore`、首次提交 | `TODO` | 先配置 `user.name` / `user.email`（当前未设）；remote/组织名依赖 Q1 |
+| T0.1 | 初始化 Git 仓库、复核 `.gitignore`、首次提交 | `DONE` | 本地完成：`main` + `eac5219`；remote 已配置；push 待 GitHub 认证（D7） |
 | T0.2 | 统一旧项目与迁移文档的相对路径（D1） | `TODO` | 取决于目标仓库布局决策 |
 | T0.3 | 编写契约 JSON Schema：`Document` / `Chunk` / `SearchRequest` / `SearchHit` / `Answer` / `Citation` / `EvalCase` / `EvalResult` | `TODO` | 放入 `contracts/`；字段与 `docs/architecture.md` §4 对齐 |
 | T0.4 | 编写 OpenAPI：Gateway / Agent / Retrieval 端点 | `TODO` | 依赖 T0.3；至少 `/documents`、`/ask`、`/search`、`/healthz` |
@@ -278,7 +288,7 @@
 | 旧项目定位（Q5） | 仅 benchmark 数据源 / 保留为 demo | 影响旧仓库冻结策略与文档叙事 |
 | 环境变量前缀（D4） | 保留 `FIN_AGENT_*` / 改为 `GROUNDEDKB_*` | 影响配置、文档与部署示例 |
 | 仓库布局（D1） | 维持 `../nianbao/annual-report-qa-agent` / 迁为 `../annual-report-qa-agent` | 决定文档路径如何修 |
-| Go module path（Q1） | 暂用 `grounded-kb.local` / 确认 remote 后改为正式路径 | 影响所有 import，需一次性替换 |
+| Go module path | 暂用 `grounded-kb.local` / 改为 `github.com/Polar12e/SourceKB-GroundedKB` | 影响所有 import，需一次性替换 |
 
 ---
 
@@ -286,7 +296,7 @@
 
 | ID | 问题 | 状态 |
 |---|---|---|
-| Q1 | 新仓库远程地址/组织名 | 未确认 |
+| Q1 | 新仓库远程地址/组织名 | 已确认：https://github.com/Polar12e/SourceKB-GroundedKB（push 待认证） |
 | Q2 | 第一个 finance vertical 的文档范围（仅年报？公告？审计报告？） | 未确认 |
 | Q3 | 向量库选型：Milvus / pgvector / OpenSearch | 未确认 |
 | Q4 | 第一步做 Web，还是先 API + CLI | 未确认 |
@@ -297,7 +307,7 @@
 
 ## 8. 下一步（按顺序）
 
-1. **确认布局与 remote**：回答 Q1/Q6；据 D1 决定是否修文档路径；配置 Git 身份并初始化 Git（T0.1）。
+1. **完成 Git 推送**：在宿主机终端完成 GitHub 认证（PAT 或 SSH），执行 `git push -u origin main`；Q1 已确认。
 2. **确认 Docker 访问**：在宿主机终端执行 `docker info` 与 `docker run --rm hello-world`；Go 环境已固化（`make test`），Docker 仍是 M0 唯一环境阻塞（D3/T0.13）。
 3. **写契约 v0**：先定 `Document`、`Chunk`、`SearchHit`、`Citation`、`EvalCase`（T0.3），再补 OpenAPI（T0.4）。
 4. **契约评审并冻结**（T0.5）；通过后并行建 Go/Python 骨架与 Compose（T0.6–T0.8）。
@@ -312,7 +322,7 @@
 | R1 | 沙箱限制 | M0 无法验收 | Docker 已装但沙箱无法连接 socket；Go 缓存已重定向 | 宿主机终端验证 Compose（D3） |
 | R2 | 文档路径漂移 | 接手人找不到旧项目/迁移方案 | D1 | 统一布局后一次性修文档，并加检查 |
 | R3 | 语料/PDF 许可 | 仓库无法公开 | 旧项目含 452 页 corpus | 只存 manifest/hash 或样例；入库前确认许可 |
-| R4 | 无版本控制 | 变更不可追溯、无法回滚 | 工作区无 `.git` | T0.1 尽快初始化 |
+| R4 | 远程未备份 | 本地提交无法在 GitHub 恢复；CI 未触发 | 本机无 GitHub 凭据，push 未完成 | 完成认证后推送（D7/T0.1） |
 | R5 | Gold Evidence 标注成本 | benchmark 不可信 | 100 题目标 | 先 20 题双人核对，再扩量 |
 | R6 | 过早平台化 | 切片交付不了 | 目录/文档已覆盖 M4 | 先 M0/M1 单垂直，平台能力按 benchmark 需求引入 |
 | R7 | 文档与实现漂移 | 交接状态失真 | README §5 状态表需随代码更新 | 每次合并更新 README §5 与本日志 |
