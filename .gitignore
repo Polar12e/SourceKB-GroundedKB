@@ -1,0 +1,35 @@
+# Secrets
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+dist/
+build/
+
+# Go
+/bin/
+/tmp/
+*.test
+.tools/
+
+# Node / web
+node_modules/
+dist/
+.next/
+
+# Data / caches
+.cache/
+_test_tmp/
+agent_eval*.json
+eval-results/
+*.npz
+
+# OS
+.DS_Store
