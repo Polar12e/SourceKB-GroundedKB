@@ -186,7 +186,7 @@
 | ID | 现象 | 影响 | 建议处置 |
 |---|---|---|---|
 | D1 | README/HANDOVER/迁移文档引用 `../annual-report-qa-agent` 与 `../TRANSITION_PLAN.md`；实际位于 `../nianbao/` 下 | 接手人按文档路径找不到旧项目与迁移方案 | 先确认目标仓库布局：若维持当前嵌套，统一改为 `../nianbao/...`；若计划迁为兄弟目录，迁移后再改。两者取其一，避免长期漂移 |
-| D2 | 已解决（17:37）：已初始化 `main` 并提交 `eac5219`；remote 已配置，push 待认证 | 变更已有历史；推送前仍无远程备份 | 完成 GitHub 认证后 `git push -u origin main`（D7） |
+| D2 | 已解决（17:37 初始化，17:43 推送）：`main` 已提交并同步到 origin | — | — |
 | D3 | Docker CE 29.10 + Compose v5.8 已安装且 systemd active，但当前 DSH bwrap 沙箱剥离 docker 组权限，无法连接 `/var/run/docker.sock`（`sg` / `setpriv` / `sudo` / `danger-full-access` 均失败）；无 rootless socket 或 TCP 入口 | `docker compose up` 无法在本会话验收；Postgres/Redis/服务容器无法启动 | 在宿主机终端运行 Docker/Compose，或为会话开放 socket 访问；Compose 文件可先写，验收放到宿主机 |
 | D4 | `.env.example` 仍使用旧项目前缀 `FIN_AGENT_*`，未定义 temperature，端口与服务名也未对齐新架构 | 配置继承旧命名，后续 model gateway/agent 的边界不清 | T0.11：确定新前缀（建议 `GROUNDEDKB_*`），补 temperature/超时/端点白名单；如需兼容旧变量，记录映射关系 |
 | D5 | `contracts/` 无任何契约文件，而文档要求“契约评审通过后再写服务” | 直接写代码会破坏契约优先原则，多语言联调返工 | T0.3 → T0.4 → T0.5，先冻结 v0 契约 |
