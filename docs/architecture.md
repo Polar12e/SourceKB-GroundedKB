@@ -1,6 +1,6 @@
 # GroundedKB 架构设计
 
-> 状态：设计稿；Go 服务骨架已落地，契约与 Python worker 待建。  
+> 状态：设计稿；Go/Python 骨架与契约 v0 草案已落地，检索/Agent 业务待实现。  
 > 目标：可溯源的 Agentic RAG 知识库平台；Go 负责服务边界，Python 负责检索/模型/评测。
 
 ---

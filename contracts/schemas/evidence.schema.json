@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Polar12e/SourceKB-GroundedKB/contracts/schemas/evidence.schema.json",
+  "title": "Evidence",
+  "description": "A document region that supports an answer or a gold label.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["document_id", "page", "line_start", "line_end"],
+  "properties": {
+    "document_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "page": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "line_start": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "line_end": {
+      "type": "integer",
+      "minimum": 1
+    }
+  }
+}

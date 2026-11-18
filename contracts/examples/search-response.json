@@ -1,0 +1,17 @@
+{
+  "hits": [
+    {
+      "chunk_id": "midea-2024:p199:c0",
+      "document_id": "midea-2024",
+      "text": "1: 2023年营业成本重述说明\n2: 因会计政策变更，营业成本调整为 2,928,031 千元。",
+      "locator": {
+        "page": 199,
+        "line_start": 1,
+        "line_end": 18,
+        "section": "财务报表附注"
+      },
+      "score": 46.575,
+      "matched_terms": ["营业", "成本", "重述"]
+    }
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Polar12e/SourceKB-GroundedKB/contracts/schemas/search-response.schema.json",
+  "title": "SearchResponse",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["hits"],
+  "properties": {
+    "hits": {
+      "type": "array",
+      "items": {
+        "$ref": "search-hit.schema.json"
+      }
+    }
+  }
+}

@@ -156,6 +156,30 @@
 - 远程仓库：`ssh://ssh.github.com:443/Polar12e/SourceKB-GroundedKB.git`。
 - D7 解除；T0.1 的 push 待办完成。后续提交直接 `git push`。
 
+### 2026-11-18 17:50 · M0 项目框架构建
+
+**新增**
+
+- `contracts/`：13 个 JSON Schema（Draft 2020-12）、OpenAPI 3.1、11 个示例、`scripts/check_contracts.py`。
+- `workers/retrieval/`：FastAPI 骨架（`/healthz`、`/search` 501）、4 个 pytest、requirements、Dockerfile。
+- `deploy/`：`compose.yaml`（7 个服务）+ Go 通用 Dockerfile；根目录 `.dockerignore`。
+- `.github/workflows/ci.yml`：Go / Python / Compose 三个 job。
+- `Makefile`：`py-install`、`py-test`、`contracts`、`test-all`、`check-all`、`compose-config`。
+- README / HANDOVER / architecture / workers / deploy 文档同步。
+
+**验证**
+
+- `make check-all`：Go vet/test 通过；Python 4 passed；contracts OK（13 schemas / 11 examples / OpenAPI 3.1.0）；compose config OK。
+- retrieval 实测：`/healthz` 200；`/search` 501；空 query 422。
+- CI YAML 可解析，3 个 job；`gofmt` clean。
+- `.venv/`、`.tools/`、`bin/` 仍被忽略。
+
+**未做**
+
+- 契约 v0 尚未评审冻结（T0.5）。
+- `docker compose up` 未运行（D3 沙箱限制）。
+- 检索算法、ingest、Agent、benchmark 未实现。
+
 ---
 
 ## 2. 工作区清单（已读）
@@ -166,18 +190,18 @@
 | [HANDOVER.md](../HANDOVER.md) | 交接摘要、Go/Python 分界、存储、迁移清单、M0–M4、风险、待确认问题、安全检查清单 | 已完成（设计稿） |
 | [docs/architecture.md](architecture.md) | 总体架构、服务职责、核心契约示例、入库/问答/评测流程、可观测性、第一版边界 | 设计稿 |
 | [docs/migration-from-annual-report.md](migration-from-annual-report.md) | 旧项目资产分级（A–D）、迁移顺序、不要照抄的部分、验收问题 | 设计稿 |
-| [contracts/README.md](../contracts/README.md) | 契约目录说明（OpenAPI / JSON Schema / protobuf） | 占位，无契约文件 |
+| [contracts/README.md](../contracts/README.md) | 契约 v0：JSON Schema / OpenAPI / 示例 | 草案已落地，待评审 |
 | [services/README.md](../services/README.md) | Go 服务边界与优先级 | 说明文件；Go 骨架已落地 |
-| [workers/README.md](../workers/README.md) | Python worker 职责与复用来源 | 占位，无代码 |
+| [workers/README.md](../workers/README.md) | Python worker 职责与复用来源 | retrieval 骨架已落地 |
 | [core/README.md](../core/README.md) | 跨 domain 算法与协议范围 | 占位，无代码 |
 | [domains/finance/README.md](../domains/finance/README.md) | finance vertical 迁移范围 | 占位，无代码 |
 | [eval/README.md](../eval/README.md) | benchmark 目标、题目字段、指标 | 占位，无实现 |
-| [deploy/README.md](../deploy/README.md) | Compose、健康检查、后续可选项 | 占位，无 Compose |
+| [deploy/README.md](../deploy/README.md) | Compose、Dockerfile、端口 | 骨架已落地；未运行 |
 | [tests/README.md](../tests/README.md) | unit/contract/integration/eval/smoke 分层 | 占位，无测试 |
 | [.env.example](../.env.example) | 本地配置占位（仍为 `FIN_AGENT_*` 前缀） | 待整理（D4） |
 | [.gitignore](../.gitignore) | 已忽略 `.env`、缓存、构建产物、评测输出、`*.npz` | 可用 |
 
-截至 2026-11-18 17:27，`contracts/`、`workers/`、`core/`、`domains/finance/`、`eval/`、`deploy/`、`tests/` 仍只有 README；`services/` 与 `internal/` 已有 Go 骨架与单测。工作区当前还有 `go.mod`、`Makefile`、`scripts/goenv.sh`、`.tools/`（缓存，已忽略）和 `bin/`（构建产物，已忽略）。
+截至 2026-11-18 17:50，`contracts/`、`workers/retrieval/`、`deploy/`、`.github/workflows/` 已落地；`core/`、`domains/finance/`、`eval/`、`tests/` 仍为占位。工作区当前还有 `go.mod`、`Makefile`、`requirements-dev.txt`、`.dockerignore`、`.tools/`（缓存）、`.venv/`（Python 依赖）和 `bin/`（构建产物），后三者已忽略。
 
 ---
 
@@ -189,9 +213,11 @@
 | D2 | 已解决（17:37 初始化，17:43 推送）：`main` 已提交并同步到 origin | — | — |
 | D3 | Docker CE 29.10 + Compose v5.8 已安装且 systemd active，但当前 DSH bwrap 沙箱剥离 docker 组权限，无法连接 `/var/run/docker.sock`（`sg` / `setpriv` / `sudo` / `danger-full-access` 均失败）；无 rootless socket 或 TCP 入口 | `docker compose up` 无法在本会话验收；Postgres/Redis/服务容器无法启动 | 在宿主机终端运行 Docker/Compose，或为会话开放 socket 访问；Compose 文件可先写，验收放到宿主机 |
 | D4 | `.env.example` 仍使用旧项目前缀 `FIN_AGENT_*`，未定义 temperature，端口与服务名也未对齐新架构 | 配置继承旧命名，后续 model gateway/agent 的边界不清 | T0.11：确定新前缀（建议 `GROUNDEDKB_*`），补 temperature/超时/端点白名单；如需兼容旧变量，记录映射关系 |
-| D5 | `contracts/` 无任何契约文件，而文档要求“契约评审通过后再写服务” | 直接写代码会破坏契约优先原则，多语言联调返工 | T0.3 → T0.4 → T0.5，先冻结 v0 契约 |
+| D5 | 已解决（17:50）：contracts v0 草案（13 schema + OpenAPI + examples）已落地；尚未评审冻结 | 字段仍可能变，冻结前不宜扩业务接口 | T0.5 评审并冻结 |
 | D6 | Go 1.27.4 已装，但默认 `GOCACHE=/home/polarize/.cache/go-build`、`GOPATH=/home/polarize/go` 在沙箱内只读，直接 `go run` / `go build` 报 `read-only file system`（已缓解） | 代码可编译但命令需额外环境变量；本地与 CI 行为不一致 | 已由 `scripts/goenv.sh` + Makefile 重定向到 `.tools/`；直接执行 `go` 前先 source（T0.13） |
 | D7 | 已解决（17:43）：SSH key 已登记，`main` 已推送；HTTPS 仍无凭据，但不再阻塞 | — | 后续使用 `git push`（SSH 443） |
+| D8 | 契约 v0 已起草但未评审冻结 | 字段/端点仍可能变，先扩业务会返工 | T0.5：记录评审意见后冻结 v0 |
+| D9 | retrieval `/search` 返回 501 | M1 检索链路不可用；Compose 只能验证存活 | T1.2 迁移 BM25/RRF，并用 T1.3 baseline 对比 |
 
 ---
 
@@ -206,17 +232,17 @@
 | T0.0 | 阅读工作区并建立任务日志 | `DONE` | 本文件；README/HANDOVER 已加链接 |
 | T0.1 | 初始化 Git 仓库、复核 `.gitignore`、首次提交 | `DONE` | 本地 + 远程完成：`main` + `eac5219` 已推送；SSH 443 可用 |
 | T0.2 | 统一旧项目与迁移文档的相对路径（D1） | `TODO` | 取决于目标仓库布局决策 |
-| T0.3 | 编写契约 JSON Schema：`Document` / `Chunk` / `SearchRequest` / `SearchHit` / `Answer` / `Citation` / `EvalCase` / `EvalResult` | `TODO` | 放入 `contracts/`；字段与 `docs/architecture.md` §4 对齐 |
-| T0.4 | 编写 OpenAPI：Gateway / Agent / Retrieval 端点 | `TODO` | 依赖 T0.3；至少 `/documents`、`/ask`、`/search`、`/healthz` |
-| T0.5 | 契约评审并冻结 v0 | `TODO` | 评审记录附在本日志；冻结后才能改服务接口 |
+| T0.3 | 编写契约 JSON Schema：`Document` / `Chunk` / `SearchRequest` / `SearchHit` / `Answer` / `Citation` / `EvalCase` / `EvalResult` | `DONE` | 13 个 Draft 2020-12 schema + 11 个 examples；`make contracts` 通过 |
+| T0.4 | 编写 OpenAPI：Gateway / Agent / Retrieval 端点 | `DONE` | OpenAPI 3.1；`/healthz`、`/documents`、`/search`、`/ask`；外部 `$ref` 已校验 |
+| T0.5 | 契约评审并冻结 v0 | `TODO` | 草案已产出；需评审记录（D8），冻结后才能扩业务接口 |
 | T0.6 | Go 服务骨架：`gateway` / `ingest` / `agent` / `model-gateway`，含 `/healthz` 与单测 | `DONE` | `make test` 4 个含测试包通过、`make vet` 通过、`make build` 四服务；`/healthz` 实测；D6 已由脚本处理 |
-| T0.7 | Python retrieval worker 骨架（FastAPI + `/healthz` + pytest） | `TODO` | 先只包健康检查与假检索，不迁算法 |
-| T0.8 | Docker Compose：Postgres + Redis + retrieval + gateway + 健康检查 | `BLOCKED` | Docker 已装但沙箱不可达；需宿主机终端或开放 socket（D3） |
-| T0.9 | README 快速开始与 Makefile/脚本对齐，确保 `docker compose up` 可跑 | `TODO` | 验收命令写入 README |
-| T0.10 | CI 骨架：Go test、Python pytest、契约校验 | `TODO` | 真实 LLM 不进默认 CI |
+| T0.7 | Python retrieval worker 骨架（FastAPI + `/healthz` + pytest） | `DONE` | 4 个 pytest 通过；`/search` 显式返回 501；运行时 health 200 |
+| T0.8 | Docker Compose：Postgres + Redis + retrieval + gateway + 健康检查 | `DOING` | 7 服务 compose + Dockerfile；`config` 通过；`up` 受 D3 阻塞 |
+| T0.9 | README 快速开始与 Makefile/脚本对齐，确保 `docker compose up` 可跑 | `DOING` | README/Makefile 已更新；`up` 未在会话内验证 |
+| T0.10 | CI 骨架：Go test、Python pytest、契约校验 | `DONE` | `.github/workflows/ci.yml` 含 3 个 job；待首次远程 CI 运行 |
 | T0.11 | 配置基线：确定环境变量前缀、补 temperature、端点白名单占位 | `TODO` | 对应 D4；禁止提交真实 key |
 | T0.12 | 向量库选型 ADR（pgvector / Milvus / OpenSearch） | `TODO` | 对应 Q3；第一版只选一个，写入 `docs/adr/` 或本日志决策表 |
-| T0.13 | 环境引导：Go 缓存、venv、pip 镜像、Docker 访问方式 | `DOING` | Go 缓存已固化（Makefile / scripts/goenv.sh）；venv/pip/Docker 待补 |
+| T0.13 | 环境引导：Go 缓存、venv、pip 镜像、Docker 访问方式 | `DOING` | Go/Python 环境已固化（scripts/goenv.sh、.venv、Aliyun 镜像）；Docker 访问待补 |
 
 ### M1：检索切片
 
@@ -272,7 +298,7 @@
 
 | 里程碑 | 验收标准 | 状态 | 主要依赖 |
 |---|---|---|---|
-| M0 契约与骨架 | `docker compose up` 可启动；`/healthz` 可用 | 进行中 | T0.3、T0.8；D3 沙箱 |
+| M0 契约与骨架 | `docker compose up` 可启动；`/healthz` 可用 | 进行中 | T0.5、T0.8；D3 沙箱 |
 | M1 检索切片 | 10 文档/10 题；Hit@4、Recall@4 baseline；页面/行号可回链 | 未开始 | M0；T1.3 baseline |
 | M2 Agent + 引用 | 10–20 题端到端；引用可核对；无证据拒答 | 未开始 | M1；T2.1–T2.6 |
 | M3 100 文档/100 题 | 100 题 Gold Evidence；四种方案对比报告 | 未开始 | M2；T3.1–T3.4 |
@@ -321,11 +347,11 @@
 
 ## 8. 下一步（按顺序）
 
-1. **确认 Docker 访问**：在宿主机终端执行 `docker info` 与 `docker run --rm hello-world`；Go 环境已固化（`make test`），Docker 仍是 M0 唯一环境阻塞（D3/T0.13）。
-2. **写契约 v0**：先定 `Document`、`Chunk`、`SearchHit`、`Citation`、`EvalCase`（T0.3），再补 OpenAPI（T0.4）。
-3. **契约评审并冻结**（T0.5）；通过后补 Python retrieval worker 骨架与 Compose（T0.7/T0.8）。
-4. **准备 M1 baseline**：用旧项目检索跑 10 题，把指标和命令留档（T1.3），作为新服务的对比基准。
-5. **进入 M1 检索切片**：10 文档入库、`/search` locator、10 题 retrieval eval（T1.4–T1.7）。
+1. **确认 Docker 访问**：在宿主机终端执行 `docker info`、`docker run --rm hello-world`，再跑 `docker compose -f deploy/compose.yaml up --build`；这是 M0 唯一环境阻塞（D3/T0.8）。
+2. **评审并冻结契约 v0**（T0.5）：按 `contracts/README.md` 的待评审问题逐项确认，记录评审意见后冻结（D8）。
+3. **准备 M1 baseline**：用旧项目检索跑 10 题，把指标和命令留档（T1.3），作为新服务的对比基准。
+4. **迁移检索算法**：把 BM25 / hit window / RRF 从旧项目迁到 `workers/retrieval`，实现 `/search` 并保留 `chunk_id` 稳定（T1.2/T1.6）。
+5. **进入 ingest 与 M1 评测**：PDF 解析、10 文档入库、10 题 retrieval eval 与 baseline 对比（T1.4/T1.5/T1.7）。
 
 ---
 

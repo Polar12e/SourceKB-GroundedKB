@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Polar12e/SourceKB-GroundedKB/contracts/schemas/locator.schema.json",
+  "title": "Locator",
+  "description": "Position of a fragment inside a document. line_end must be >= line_start.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["page", "line_start", "line_end"],
+  "properties": {
+    "page": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "line_start": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "line_end": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "section": {
+      "type": "string",
+      "minLength": 1
+    }
+  }
+}

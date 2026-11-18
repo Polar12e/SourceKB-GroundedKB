@@ -1,0 +1,1 @@
+"""GroundedKB retrieval worker."""

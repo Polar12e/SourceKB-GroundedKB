@@ -1,0 +1,18 @@
+{
+  "case_id": "finance-001",
+  "question": "2023年营业成本为什么重述？",
+  "type": "explain",
+  "gold_evidence": [
+    {
+      "document_id": "midea-2024",
+      "page": 199,
+      "line_start": 16,
+      "line_end": 17
+    }
+  ],
+  "expected": {
+    "value": "2928031",
+    "unit": "千元"
+  },
+  "split": "dev"
+}

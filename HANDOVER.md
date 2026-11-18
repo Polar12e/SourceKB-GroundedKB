@@ -3,14 +3,14 @@
 > 项目名：高保真知识库（GroundedKB）  
 > 定位：可溯源的 Agentic RAG 知识库平台  
 > 技术栈：Go + Python  
-> 状态：**Go 服务骨架可运行；契约、Python worker 与 Compose 待建**  
+> 状态：**Go/Python 骨架与契约 v0 草案已落地；检索/Agent 业务待实现**  
 > 创建日期：2026-11-18
 
 ---
 
 ## 1. 交接摘要
 
-当前目录是 GroundedKB 的新项目起点，Go 骨架可运行，但还不是完整系统。
+当前目录是 GroundedKB 的新项目起点，Go 骨架与 Python retrieval 骨架可运行，但还不是完整系统。
 
 已完成：
 
@@ -20,14 +20,17 @@
 - 架构原则；
 - 旧项目资产迁移清单；
 - 风险与里程碑；
-- Go 服务骨架（gateway / ingest / agent / model-gateway + `/healthz`）。
+- Go 服务骨架（gateway / ingest / agent / model-gateway + `/healthz`）；
+- Python retrieval 骨架（`/healthz`；`/search` 暂返回 501）；
+- 契约 v0 草案（13 个 JSON Schema + OpenAPI）；
+- Compose / Dockerfile 骨架（`config` 校验通过，未在会话内运行）；
+- CI 骨架。
 
 未完成：
 
-- Python 代码；
-- 服务契约；
-- Docker Compose；
-- 文档入库与检索；
+- 契约 v0 评审与冻结；
+- Python 检索算法迁移；
+- ingest pipeline；
 - benchmark；
 - Web/API。
 
@@ -165,15 +168,23 @@
 grounded-kb/
 ├─ README.md
 ├─ HANDOVER.md
-├─ Makefile                   # Go 开发入口
+├─ Makefile                   # Go / Python / 契约入口
 ├─ go.mod
+├─ requirements-dev.txt
 ├─ .env.example
 ├─ .gitignore
-├─ scripts/                   # 本地工具（goenv.sh）
+├─ .dockerignore
+├─ .github/workflows/ci.yml
+├─ scripts/
+│  ├─ goenv.sh
+│  └─ check_contracts.py
 ├─ docs/
 │  ├─ architecture.md
 │  └─ migration-from-annual-report.md
-├─ contracts/                 # 待建
+├─ contracts/
+│  ├─ openapi.yaml
+│  ├─ schemas/
+│  └─ examples/
 ├─ services/
 │  ├─ gateway/                # Go
 │  ├─ ingest/                 # Go
@@ -181,17 +192,19 @@ grounded-kb/
 │  └─ model-gateway/          # Go
 ├─ internal/                  # Go 共享平台包
 ├─ workers/
-│  ├─ retrieval/              # Python 先复用
-│  ├─ embedding/              # Python
-│  ├─ parser/                 # Python
-│  └─ eval/                   # Python
+│  ├─ retrieval/              # Python 骨架
+│  ├─ embedding/              # 待建
+│  ├─ parser/                 # 待建
+│  └─ eval/                   # 待建
 ├─ core/                      # 算法/协议
 ├─ domains/finance/           # 第一个 vertical
-├─ deploy/                    # compose / migrations
+├─ deploy/
+│  ├─ compose.yaml
+│  └─ docker/go-service.Dockerfile
 └─ tests/
 ```
 
-Go 服务骨架已落地；契约、Python worker 与 Compose 尚未落地。
+Go/Python 骨架与契约草案已落地；检索算法、ingest、Agent 业务与 Compose 运行待补。
 
 ---
 

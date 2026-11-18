@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Polar12e/SourceKB-GroundedKB/contracts/schemas/health.schema.json",
+  "title": "Health",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["status", "service"],
+  "properties": {
+    "status": {
+      "const": "ok"
+    },
+    "service": {
+      "type": "string",
+      "minLength": 1
+    }
+  }
+}

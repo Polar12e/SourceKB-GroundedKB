@@ -79,34 +79,44 @@ Storage
 grounded-kb/
 ├─ README.md
 ├─ HANDOVER.md
-├─ Makefile                   # Go 开发入口
+├─ Makefile                   # Go / Python / 契约入口
 ├─ go.mod
+├─ requirements-dev.txt
 ├─ .env.example
 ├─ .gitignore
-├─ scripts/                   # 本地工具（goenv.sh）
+├─ .dockerignore
+├─ .github/workflows/ci.yml   # CI 骨架
+├─ scripts/
+│  ├─ goenv.sh                # Go 缓存重定向
+│  └─ check_contracts.py      # JSON Schema / OpenAPI 校验
 ├─ docs/
 │  ├─ architecture.md
 │  └─ migration-from-annual-report.md
-├─ contracts/                 # OpenAPI / protobuf / JSON schema（待建）
+├─ contracts/                 # v0 草案
+│  ├─ openapi.yaml
+│  ├─ schemas/
+│  └─ examples/
 ├─ services/                  # Go 服务（骨架）
 │  ├─ gateway/
 │  ├─ ingest/
 │  ├─ agent/
 │  └─ model-gateway/
 ├─ internal/                  # Go 共享平台包（config/health/httpserver/service）
-├─ workers/                   # Python worker（待建）
-│  ├─ retrieval/
-│  ├─ embedding/
-│  ├─ parser/
-│  └─ eval/
+├─ workers/                   # Python worker
+│  ├─ retrieval/              # 骨架：/healthz；/search 501
+│  ├─ embedding/              # 待建
+│  ├─ parser/                 # 待建
+│  └─ eval/                   # 待建
 ├─ core/                      # 可复用的算法与协议（待建）
 ├─ domains/
 │  └─ finance/                # 第一个 vertical（待建）
-├─ deploy/                    # docker compose / migrations（待建）
+├─ deploy/                    # Compose + Dockerfile（骨架）
+│  ├─ compose.yaml
+│  └─ docker/go-service.Dockerfile
 └─ tests/                     # 跨服务测试（待建）
 ```
 
-当前已有 Go 服务骨架（gateway / ingest / agent / model-gateway）；契约、Python worker 与 Docker Compose 仍待落地。
+当前已有 Go 服务骨架、Python retrieval 骨架、契约 v0 草案、Compose/Dockerfile 与 CI 骨架；检索算法、ingest、Agent 业务与 Web 待落地。
 
 ---
 
@@ -117,9 +127,14 @@ grounded-kb/
 - [x] 架构文档
 - [x] 旧项目资产盘点与迁移原则
 - [x] Go 服务骨架：gateway / ingest / agent / model-gateway + `/healthz`
-- [ ] Python worker 骨架
-- [ ] 第一个 retrieval service
+- [x] 契约 v0 草案：13 个 JSON Schema + OpenAPI（待评审冻结）
+- [x] Python retrieval 骨架：`/healthz`；`/search` 暂返回 501
+- [x] Compose + Dockerfile 骨架（`config` 校验通过；未在会话内运行）
+- [x] CI 骨架
+- [ ] 契约 v0 评审冻结
+- [ ] 检索算法迁移（BM25 / dense / RRF / hit window）
 - [ ] 第一个 ingest pipeline
+- [ ] Agent 业务、引用校验与拒答
 - [ ] 第一个 10 题 benchmark
 - [ ] 第一个 Web/API demo
 
@@ -127,7 +142,7 @@ grounded-kb/
 
 ## 6. 快速开始
 
-当前 Go 服务骨架可运行；Python worker、契约和 Docker Compose 尚未落地。
+当前可运行 Go 服务与 Python retrieval 骨架；Compose 文件可校验，但真正 `up` 需要宿主机可访问 Docker socket。
 
 Go 服务：
 
@@ -145,16 +160,30 @@ curl http://127.0.0.1:8080/healthz
 
 其他服务：`make run-ingest`（:8082）、`make run-agent`（:8083）、`make run-model-gateway`（:8084）。
 
-后续目标入口（计划中）：
+Python retrieval：
 
 ```bash
-docker compose up
+make py-install
+make py-test
+make contracts
+make py-run-retrieval
+# 另开终端
+curl http://127.0.0.1:8081/healthz
+# /search 当前返回 501，待迁移检索算法
 ```
 
-Python worker / eval 待代码落地后启用：
+Compose：
 
 ```bash
-python -m pytest
+docker compose -f deploy/compose.yaml config
+docker compose -f deploy/compose.yaml up --build
+```
+
+当前会话无法连接 Docker socket；`up` 请在宿主机终端执行。
+
+后续启用（代码落地后）：
+
+```bash
 python -m eval.run --dataset finance_v1
 ```
 
@@ -162,6 +191,9 @@ python -m eval.run --dataset finance_v1
 
 - [docs/architecture.md](docs/architecture.md)
 - [docs/migration-from-annual-report.md](docs/migration-from-annual-report.md)
+- [contracts/README.md](contracts/README.md)
+- [deploy/README.md](deploy/README.md)
+- [workers/retrieval/README.md](workers/retrieval/README.md)
 - [HANDOVER.md](HANDOVER.md)
 
 ---
@@ -173,6 +205,8 @@ python -m eval.run --dataset finance_v1
 | [HANDOVER.md](HANDOVER.md) | 交接状态、决策、风险、里程碑 |
 | [docs/task-log.md](docs/task-log.md) | 任务 backlog、会话记录、偏差与决策 |
 | [docs/architecture.md](docs/architecture.md) | 服务边界、契约、数据流 |
+| [contracts/README.md](contracts/README.md) | 契约 v0、字段约定、校验方式 |
+| [deploy/README.md](deploy/README.md) | Compose、Dockerfile、端口 |
 | [docs/migration-from-annual-report.md](docs/migration-from-annual-report.md) | 从旧年报项目迁移哪些资产 |
 
 ---

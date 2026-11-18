@@ -1,0 +1,139 @@
+openapi: 3.1.0
+info:
+  title: GroundedKB API
+  version: 0.1.0
+  description: |
+    M0 contract draft for the GroundedKB gateway, agent and retrieval services.
+
+    The contract is intentionally small: health, document upload, search and ask.
+    Retrieval internals and the agent tool protocol are added after v0 review.
+  contact:
+    name: GroundedKB
+servers:
+  - url: http://localhost:8080
+    description: Gateway
+  - url: http://localhost:8081
+    description: Retrieval service
+tags:
+  - name: system
+    description: Liveness and readiness
+  - name: documents
+    description: Document ingest
+  - name: retrieval
+    description: Retrieval over indexed documents
+  - name: agent
+    description: Answer generation with citations
+paths:
+  /healthz:
+    get:
+      tags: [system]
+      operationId: getHealth
+      summary: Liveness check
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                $ref: './schemas/health.schema.json'
+  /documents:
+    post:
+      tags: [documents]
+      operationId: createDocument
+      summary: Upload a document and queue ingest
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [file, title]
+              properties:
+                file:
+                  type: string
+                  format: binary
+                title:
+                  type: string
+                  minLength: 1
+                company:
+                  type: string
+                year:
+                  type: integer
+                  minimum: 1900
+                  maximum: 2100
+                doc_type:
+                  type: string
+      responses:
+        '202':
+          description: Document accepted and queued for ingest
+          content:
+            application/json:
+              schema:
+                $ref: './schemas/document.schema.json'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /search:
+    post:
+      tags: [retrieval]
+      operationId: search
+      summary: Search indexed chunks
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: './schemas/search-request.schema.json'
+      responses:
+        '200':
+          description: Ranked search hits with page and line locators
+          content:
+            application/json:
+              schema:
+                $ref: './schemas/search-response.schema.json'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /ask:
+    post:
+      tags: [agent]
+      operationId: ask
+      summary: Answer a question with citations or abstain
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [question]
+              properties:
+                question:
+                  type: string
+                  minLength: 1
+                  maxLength: 2000
+                filters:
+                  type: object
+                  additionalProperties:
+                    type: string
+                top_k:
+                  type: integer
+                  minimum: 1
+                  maximum: 50
+                  default: 5
+      responses:
+        '200':
+          description: Answer, citations and trace id
+          content:
+            application/json:
+              schema:
+                $ref: './schemas/answer.schema.json'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+components:
+  responses:
+    BadRequest:
+      description: Invalid request
+      content:
+        application/json:
+          schema:
+            $ref: './schemas/error.schema.json'

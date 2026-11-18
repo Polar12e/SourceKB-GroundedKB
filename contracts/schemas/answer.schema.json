@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Polar12e/SourceKB-GroundedKB/contracts/schemas/answer.schema.json",
+  "title": "Answer",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["answer", "status", "citations", "trace_id"],
+  "properties": {
+    "answer": {
+      "type": "string"
+    },
+    "status": {
+      "enum": ["ok", "insufficient_evidence", "error"]
+    },
+    "citations": {
+      "type": "array",
+      "items": {
+        "$ref": "citation.schema.json"
+      }
+    },
+    "trace_id": {
+      "type": "string",
+      "minLength": 1
+    }
+  }
+}

@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Polar12e/SourceKB-GroundedKB/contracts/schemas/document.schema.json",
+  "title": "Document",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["document_id", "source", "title", "sha256", "page_count", "status"],
+  "properties": {
+    "document_id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9._-]{0,127}$"
+    },
+    "source": {
+      "enum": ["upload", "url"]
+    },
+    "title": {
+      "type": "string",
+      "minLength": 1
+    },
+    "company": {
+      "type": "string",
+      "minLength": 1
+    },
+    "year": {
+      "type": "integer",
+      "minimum": 1900,
+      "maximum": 2100
+    },
+    "doc_type": {
+      "type": "string",
+      "minLength": 1
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "page_count": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "status": {
+      "enum": ["queued", "parsing", "indexing", "ready", "failed"]
+    }
+  }
+}

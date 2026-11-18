@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Polar12e/SourceKB-GroundedKB/contracts/schemas/search-hit.schema.json",
+  "title": "SearchHit",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["chunk_id", "document_id", "text", "locator", "score"],
+  "properties": {
+    "chunk_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "document_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "text": {
+      "type": "string",
+      "minLength": 1
+    },
+    "locator": {
+      "$ref": "locator.schema.json"
+    },
+    "score": {
+      "type": "number"
+    },
+    "matched_terms": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "uniqueItems": true
+    }
+  }
+}
