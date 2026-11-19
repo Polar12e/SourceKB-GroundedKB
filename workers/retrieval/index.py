@@ -5,7 +5,7 @@ from __future__ import annotations
 import math
 from collections import Counter
 from dataclasses import dataclass
-from typing import Iterable, Protocol
+from typing import Iterable, Mapping, Protocol
 
 from .chunking import (
     CHUNK_OVERLAP,
@@ -15,10 +15,12 @@ from .chunking import (
     chunk_pages,
     tokenize,
 )
+from .documents import DocumentMeta
 from .windows import WINDOW_MAX_CHARS, WINDOW_RADIUS, window_for_lines
 
 BM25_K1 = 1.5
 BM25_B = 0.75
+FILTER_FIELDS = frozenset({"document_id", "company", "year", "doc_type"})
 
 
 class QueryProfile(Protocol):
@@ -71,6 +73,7 @@ class BM25Index:
         k1: float = BM25_K1,
         b: float = BM25_B,
         profile: QueryProfile | None = None,
+        documents: Mapping[str, DocumentMeta] | None = None,
     ) -> None:
         if k1 < 0:
             raise ValueError("k1 must be >= 0")
@@ -81,6 +84,7 @@ class BM25Index:
         self.k1 = k1
         self.b = b
         self.profile = profile
+        self.documents = dict(documents or {})
         self.tokens = [tokenize(chunk.text) for chunk in chunks]
         self.term_counts = [Counter(tokens) for tokens in self.tokens]
         self.lengths = [len(tokens) for tokens in self.tokens]
@@ -105,6 +109,7 @@ class BM25Index:
         k1: float = BM25_K1,
         b: float = BM25_B,
         profile: QueryProfile | None = None,
+        documents: Mapping[str, DocumentMeta] | None = None,
     ) -> BM25Index:
         page_list = list(pages)
         page_text: dict[tuple[str, int], str] = {}
@@ -119,10 +124,47 @@ class BM25Index:
             k1=k1,
             b=b,
             profile=profile,
+            documents=documents,
         )
 
     def page_text(self, document_id: str, page: int) -> str:
         return self.pages.get((document_id, page), "")
+
+    @staticmethod
+    def _normalize_filters(filters: Mapping[str, str] | None) -> dict[str, str]:
+        if not filters:
+            return {}
+        unknown = {str(key) for key in filters} - FILTER_FIELDS
+        if unknown:
+            raise ValueError(f"unknown filter fields: {', '.join(sorted(unknown))}")
+        normalized = {
+            str(key): str(value).strip()
+            for key, value in filters.items()
+            if str(value).strip()
+        }
+        year = normalized.get("year")
+        if year is not None and not year.isdigit():
+            raise ValueError("year filter must be an integer")
+        return normalized
+
+    def _matches_filters(self, chunk: Chunk, filters: Mapping[str, str]) -> bool:
+        if not filters:
+            return True
+        if "document_id" in filters and chunk.document_id != filters["document_id"]:
+            return False
+        if set(filters) == {"document_id"}:
+            return True
+
+        document = self.documents.get(chunk.document_id)
+        if document is None:
+            return False
+        if "company" in filters and document.company.upper() != filters["company"].upper():
+            return False
+        if "year" in filters and str(document.year) != filters["year"]:
+            return False
+        if "doc_type" in filters and document.doc_type != filters["doc_type"]:
+            return False
+        return True
 
     def weighted_terms(self, query: str) -> dict[str, float]:
         weights: dict[str, float] = {term: 1.0 for term in tokenize(query)}
@@ -131,8 +173,17 @@ class BM25Index:
                 weights[term] = max(weights.get(term, 0.0), weight)
         return weights
 
-    def search(self, query: str, top_k: int = 5) -> list[SearchHit]:
-        if top_k <= 0 or not query.strip() or not self.chunks:
+    def search(
+        self,
+        query: str,
+        top_k: int = 5,
+        filters: Mapping[str, str] | None = None,
+    ) -> list[SearchHit]:
+        if top_k <= 0:
+            return []
+
+        active_filters = self._normalize_filters(filters)
+        if not query.strip() or not self.chunks:
             return []
 
         weights = self.weighted_terms(query)
@@ -142,6 +193,8 @@ class BM25Index:
         scored: list[tuple[float, int]] = []
         average_length = self.avg_length or 1.0
         for index, counts in enumerate(self.term_counts):
+            if not self._matches_filters(self.chunks[index], active_filters):
+                continue
             score = 0.0
             for term, weight in weights.items():
                 frequency = counts.get(term)

@@ -11,7 +11,7 @@ used by the legacy ``bm25`` baseline. The broader colloquial lexicon
 
 from __future__ import annotations
 
-from core.text import tokenize
+from core.text import normalize, tokenize
 
 QUERY_EXPANSIONS: dict[str, tuple[str, ...]] = {
     "毛利率": ("营业收入", "营业成本"),
@@ -39,6 +39,7 @@ class FinanceRetrievalProfile:
     """Query expansion and statement-page prior for annual reports."""
 
     def expanded_terms(self, query: str) -> dict[str, float]:
+        query = normalize(query)
         weights: dict[str, float] = {}
         for key, terms in QUERY_EXPANSIONS.items():
             if key not in query:
@@ -49,7 +50,8 @@ class FinanceRetrievalProfile:
         return weights
 
     def page_prior(self, query: str, page_text: str) -> float:
+        query = normalize(query)
         if any(marker in query for marker in NOTES_MARKERS):
             return 0.0
-        head = page_text[:240]
+        head = normalize(page_text[:240])
         return STATEMENT_BONUS if any(title in head for title in STATEMENT_TITLES) else 0.0

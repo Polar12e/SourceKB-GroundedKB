@@ -4,11 +4,19 @@ from __future__ import annotations
 
 import re
 
+try:
+    from zhconv import convert as _to_simplified
+except ImportError:  # pragma: no cover - dependency is in retrieval requirements
+    _to_simplified = None
+
 
 def normalize(text: str) -> str:
-    """Lowercase, strip thousands separators, and join split CJK labels."""
+    """Normalize Chinese variants, case, thousands separators and CJK breaks."""
 
-    text = re.sub(r"(?<=\d),(?=\d{3})", "", text.lower())
+    text = text.lower()
+    if _to_simplified is not None:
+        text = _to_simplified(text, "zh-hans")
+    text = re.sub(r"(?<=\d),(?=\d{3})", "", text)
     return re.sub(r"(?<=[\u4e00-\u9fff])\s+(?=[\u4e00-\u9fff])", "", text)
 
 

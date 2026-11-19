@@ -10,12 +10,13 @@ from __future__ import annotations
 import os
 from pathlib import Path
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
 
 from domains.finance.retrieval import FinanceRetrievalProfile
 
 from .corpus import load_pages_jsonl
+from .documents import load_documents_manifest
 from .index import BM25Index
 
 
@@ -54,9 +55,15 @@ def _default_index() -> BM25Index:
     corpus = os.getenv("RETRIEVAL_CORPUS")
     if not corpus:
         return BM25Index.from_pages([], profile=FinanceRetrievalProfile())
+
+    manifest = Path(
+        os.getenv("RETRIEVAL_MANIFEST", "data/manifests/documents.json")
+    )
+    documents = load_documents_manifest(manifest) if manifest.exists() else None
     return BM25Index.from_pages(
         load_pages_jsonl(Path(corpus)),
         profile=FinanceRetrievalProfile(),
+        documents=documents,
     )
 
 
@@ -78,7 +85,14 @@ def create_app(index: BM25Index | None = None) -> FastAPI:
         tags=["retrieval"],
     )
     def search(request: SearchRequest) -> SearchResponse:
-        hits = active.search(request.query, top_k=request.top_k)
+        try:
+            hits = active.search(
+                request.query,
+                top_k=request.top_k,
+                filters=request.filters,
+            )
+        except ValueError as exc:
+            raise HTTPException(status_code=400, detail=str(exc)) from exc
         return SearchResponse(
             hits=[SearchHit(**hit.to_contract()) for hit in hits]
         )

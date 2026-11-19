@@ -129,6 +129,7 @@ grounded-kb/
 - [x] 旧项目资产盘点与迁移原则
 - [x] Go 服务骨架：gateway / ingest / agent / model-gateway + `/healthz`
 - [x] Python retrieval：BM25 + hit window + RRF + finance profile
+- [x] Retrieval 增强：metadata filters（company/year/doc_type/document_id）+ 简繁归一
 - [x] 10 文档本地语料：PDF parser + manifest + 页级 JSONL
 - [x] 契约 v0 草案：13 个 JSON Schema + OpenAPI（待评审冻结）
 - [x] Compose + Dockerfile 骨架（`config` 校验通过；未在会话内运行）
@@ -180,6 +181,18 @@ curl http://127.0.0.1:8081/healthz
 curl -X POST http://127.0.0.1:8081/search \
   -H 'content-type: application/json' \
   -d '{"query":"营业成本重述","top_k":3}'
+```
+
+10 文档 + metadata filter：
+
+```bash
+RETRIEVAL_CORPUS=data/private/corpus/pages.jsonl \
+RETRIEVAL_MANIFEST=data/manifests/documents.json \
+  make py-run-retrieval
+
+curl -X POST http://127.0.0.1:8081/search \
+  -H 'content-type: application/json' \
+  -d '{"query":"2025年营业收入","top_k":3,"filters":{"company":"688981.SH"}}'
 ```
 
 Compose：

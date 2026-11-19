@@ -2,6 +2,7 @@ from fastapi.testclient import TestClient
 
 from workers.retrieval.app import app, create_app
 from workers.retrieval.chunking import Page
+from workers.retrieval.documents import DocumentMeta
 from workers.retrieval.index import BM25Index
 
 client = TestClient(app)
@@ -44,6 +45,38 @@ def test_search_returns_hits_with_locator() -> None:
     assert hits[0]["locator"]["line_start"] >= 1
     assert "section" not in hits[0]["locator"]
     assert "营业收入" in hits[0]["text"]
+
+
+def test_search_filters_by_document_metadata() -> None:
+    index = BM25Index.from_pages(
+        [
+            Page("doc-a", 1, "营业收入 1"),
+            Page("doc-b", 1, "营业收入 2"),
+        ],
+        documents={
+            "doc-a": DocumentMeta("doc-a", "AAA.HK", 2024, "annual_report"),
+            "doc-b": DocumentMeta("doc-b", "BBB.HK", 2025, "interim_report"),
+        },
+    )
+    local = TestClient(create_app(index))
+
+    response = local.post(
+        "/search",
+        json={"query": "营业收入", "filters": {"company": "BBB.HK"}},
+    )
+
+    assert response.status_code == 200
+    hits = response.json()["hits"]
+    assert [hit["document_id"] for hit in hits] == ["doc-b"]
+
+
+def test_search_rejects_unknown_filter() -> None:
+    response = client.post(
+        "/search",
+        json={"query": "营业收入", "filters": {"unknown": "x"}},
+    )
+
+    assert response.status_code == 400
 
 
 def test_search_rejects_empty_query() -> None:

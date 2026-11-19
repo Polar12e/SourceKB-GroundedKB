@@ -254,6 +254,26 @@
 - 跨文档 10 题（腾讯/中芯/小米）与 Xiaomi OCR。
 - 数据库/索引服务 ingest；dense/embedding。
 
+### 2026-11-19 14:59 · Retrieval 完善：metadata filters + 简繁归一
+
+**新增**
+
+- `core/text.py` 接入 `zhconv`：繁體/简体 query 与文档共享 token；requirements 增加 `zhconv`。
+- `workers/retrieval/documents.py`：manifest → `DocumentMeta`。
+- `BM25Index` 支持 `company` / `year` / `doc_type` / `document_id` 过滤；未知字段/非法年份报错。
+- FastAPI `/search` 透传 `filters`，非法 filter 返回 400。
+- 新增 filters、简繁归一测试；workers/retrieval README 同步。
+
+**验证**
+
+- 43 个 Python 测试通过；Midea 10 题指标保持 Hit@4=1.000 / Recall@4=0.975 / MRR=1.000。
+- 实测：`company=00700.HK` 命中腾讯 2025H1；`company=688981.SH` 命中中芯国际 2025；繁体文档可用简体 query。
+- `unknown filter` 返回 400。
+
+**未做**
+
+- 跨文档 10 题；小米 OCR；DB ingest；dense/embedding。
+
 ---
 
 ## 2. 工作区清单（已读）
@@ -335,6 +355,7 @@
 | T1.5 | 10 份文档入库：解析、chunk、metadata、索引 | `DOING` | 10 文档 / 2201 页本地 corpus + manifest；数据库/索引服务待接 |
 | T1.6 | `POST /search` 返回 `document_id/page/line_start/line_end/score/matched_terms` | `DONE` | 支持 `RETRIEVAL_CORPUS`；响应通过契约校验；ingest 后接动态索引 |
 | T1.7 | 新服务 10 题 retrieval eval，与 T1.3 baseline 对比 | `DONE` | 新服务 Hit@4=1.000 / Recall@4=0.975 / MRR=1.000，与旧 baseline 一致（Midea） |
+| T1.8 | Retrieval 增强：metadata filters + 简繁归一 | `DONE` | company/year/doc_type/document_id 过滤；zhconv；43 tests |
 
 ### M2：Agent + 引用
 
@@ -377,7 +398,7 @@
 | 里程碑 | 验收标准 | 状态 | 主要依赖 |
 |---|---|---|---|
 | M0 契约与骨架 | `docker compose up` 可启动；`/healthz` 可用 | 进行中 | T0.5、T0.8；D3 沙箱 |
-| M1 检索切片 | 10 文档/10 题；Hit@4、Recall@4 baseline；页面/行号可回链 | 进行中 | 10 文档 + Midea 10 题 baseline 已完成；跨文档题/Xiaomi OCR/DB ingest 未完成 |
+| M1 检索切片 | 10 文档/10 题；Hit@4、Recall@4 baseline；页面/行号可回链 | 进行中 | 10 文档 + Midea 10 题 + filters/简繁已完成；跨文档题/Xiaomi OCR/DB ingest 未完成 |
 | M2 Agent + 引用 | 10–20 题端到端；引用可核对；无证据拒答 | 未开始 | M1；T2.1–T2.6 |
 | M3 100 文档/100 题 | 100 题 Gold Evidence；四种方案对比报告 | 未开始 | M2；T3.1–T3.4 |
 | M4 平台化 | 异步 ingest、索引重建、观测、基础 Web | 未开始 | M3 |

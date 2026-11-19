@@ -10,6 +10,7 @@ from workers.retrieval.chunking import (
     tokenize,
 )
 from workers.retrieval.corpus import load_pages_jsonl
+from workers.retrieval.documents import DocumentMeta
 from workers.retrieval.index import BM25Index
 from workers.retrieval.windows import window_for_lines
 
@@ -23,6 +24,9 @@ class TestTokenize:
 
     def test_bigrams(self) -> None:
         assert tokenize("营业收入") == ["营业", "业收", "收入"]
+
+    def test_traditional_and_simplified_share_tokens(self) -> None:
+        assert tokenize("營業收入") == tokenize("营业收入")
 
 
 class TestChunking:
@@ -70,6 +74,37 @@ class TestBM25:
         assert "营业收入" in hits[0].text
         assert hits[0].line_start >= 1
         assert hits[0].line_end >= hits[0].line_start
+
+    def test_traditional_document_matches_simplified_query(self) -> None:
+        index = BM25Index.from_pages([Page("tencent", 1, "營業收入 1")])
+        hits = index.search("营业收入", top_k=3)
+        assert hits and hits[0].document_id == "tencent"
+
+    def test_metadata_filters(self) -> None:
+        documents = {
+            "doc-a": DocumentMeta("doc-a", "AAA.HK", 2024, "annual_report"),
+            "doc-b": DocumentMeta("doc-b", "BBB.HK", 2025, "interim_report"),
+        }
+        index = BM25Index.from_pages(
+            [
+                Page("doc-a", 1, "营业收入 1"),
+                Page("doc-b", 1, "营业收入 2"),
+            ],
+            documents=documents,
+        )
+
+        assert {hit.document_id for hit in index.search("营业收入")} == {"doc-a", "doc-b"}
+        assert [hit.document_id for hit in index.search("营业收入", filters={"company": "BBB.HK"})] == ["doc-b"]
+        assert [hit.document_id for hit in index.search("营业收入", filters={"year": "2024"})] == ["doc-a"]
+        assert [hit.document_id for hit in index.search("营业收入", filters={"doc_type": "interim_report"})] == ["doc-b"]
+        assert [hit.document_id for hit in index.search("营业收入", filters={"document_id": "doc-a"})] == ["doc-a"]
+
+    def test_unknown_or_invalid_filter_is_rejected(self) -> None:
+        index = BM25Index.from_pages([Page("doc-a", 1, "营业收入 1")])
+        with pytest.raises(ValueError, match="unknown filter"):
+            index.search("营业收入", filters={"unknown": "x"})
+        with pytest.raises(ValueError, match="year filter"):
+            index.search("营业收入", filters={"year": "not-a-year"})
 
     def test_documents_with_same_page_number_do_not_collide(self) -> None:
         pages = [
