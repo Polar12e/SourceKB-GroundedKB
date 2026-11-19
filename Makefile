@@ -24,7 +24,7 @@ export PIP_CACHE_DIR
 SERVICES := gateway ingest agent model-gateway
 
 .PHONY: help env fmt tidy vet test check build clean run-gateway run-ingest run-agent run-model-gateway \
-	py-install py-test contracts test-all check-all compose-config py-run-retrieval ci
+	py-install py-test contracts test-all check-all compose-config py-run-retrieval eval ci
 
 help:
 	@echo "GroundedKB development commands"
@@ -40,6 +40,7 @@ help:
 	@echo "    make py-install install Python dev dependencies into .venv/"
 	@echo "    make py-test    run retrieval worker tests"
 	@echo "    make contracts  validate JSON Schema / OpenAPI examples"
+	@echo "    make eval       run the 10-case Midea retrieval eval"
 	@echo "    make py-run-retrieval"
 	@echo "  Combined:"
 	@echo "    make test-all   go test + py-test + contracts"
@@ -95,10 +96,13 @@ py-install:
 	$(VENV)/bin/pip install -r requirements-dev.txt
 
 py-test:
-	$(PYTHON) -m pytest workers
+	$(PYTHON) -m pytest workers eval
 
 contracts:
 	$(PYTHON) scripts/check_contracts.py
+
+eval:
+	$(PYTHON) -m eval.run_retrieval
 
 py-run-retrieval:
 	$(PYTHON) -m uvicorn workers.retrieval.app:app --host 0.0.0.0 --port 8081

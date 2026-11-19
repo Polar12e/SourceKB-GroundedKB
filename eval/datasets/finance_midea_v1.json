@@ -1,0 +1,184 @@
+[
+  {
+    "case_id": "midea-q01",
+    "question": "2023年营业成本为什么重述？影响多少？",
+    "type": "explain",
+    "gold_evidence": [
+      {
+        "document_id": "midea-2024",
+        "page": 199,
+        "line_start": 1,
+        "line_end": 16
+      },
+      {
+        "document_id": "midea-2024",
+        "page": 126,
+        "line_start": 16,
+        "line_end": 24
+      },
+      {
+        "document_id": "midea-2024",
+        "page": 355,
+        "line_start": 1,
+        "line_end": 16
+      },
+      {
+        "document_id": "midea-2024",
+        "page": 159,
+        "line_start": 1,
+        "line_end": 15
+      }
+    ],
+    "split": "dev"
+  },
+  {
+    "case_id": "midea-q02",
+    "question": "质保费重分类对2023年营业成本的影响金额是多少？",
+    "type": "explain",
+    "gold_evidence": [
+      {
+        "document_id": "midea-2024",
+        "page": 199,
+        "line_start": 1,
+        "line_end": 16
+      },
+      {
+        "document_id": "midea-2024",
+        "page": 126,
+        "line_start": 16,
+        "line_end": 24
+      },
+      {
+        "document_id": "midea-2024",
+        "page": 355,
+        "line_start": 1,
+        "line_end": 16
+      }
+    ],
+    "split": "dev"
+  },
+  {
+    "case_id": "midea-q03",
+    "question": "2024年营业收入是多少？",
+    "type": "lookup",
+    "gold_evidence": [
+      {
+        "document_id": "midea-2024",
+        "page": 159,
+        "line_start": 1,
+        "line_end": 15
+      }
+    ],
+    "split": "dev"
+  },
+  {
+    "case_id": "midea-q04",
+    "question": "2024年营业成本是多少？",
+    "type": "lookup",
+    "gold_evidence": [
+      {
+        "document_id": "midea-2024",
+        "page": 159,
+        "line_start": 1,
+        "line_end": 15
+      }
+    ],
+    "split": "dev"
+  },
+  {
+    "case_id": "midea-q05",
+    "question": "2024年归属于母公司股东的净利润是多少？",
+    "type": "lookup",
+    "gold_evidence": [
+      {
+        "document_id": "midea-2024",
+        "page": 159,
+        "line_start": 39,
+        "line_end": 48
+      }
+    ],
+    "split": "dev"
+  },
+  {
+    "case_id": "midea-q06",
+    "question": "2024年经营活动产生的现金流量净额是多少？",
+    "type": "lookup",
+    "gold_evidence": [
+      {
+        "document_id": "midea-2024",
+        "page": 161,
+        "line_start": 20,
+        "line_end": 25
+      }
+    ],
+    "split": "dev"
+  },
+  {
+    "case_id": "midea-q07",
+    "question": "2024年末资产总计是多少？",
+    "type": "lookup",
+    "gold_evidence": [
+      {
+        "document_id": "midea-2024",
+        "page": 157,
+        "line_start": 39,
+        "line_end": 41
+      }
+    ],
+    "split": "dev"
+  },
+  {
+    "case_id": "midea-q08",
+    "question": "2024年末负债合计是多少？",
+    "type": "lookup",
+    "gold_evidence": [
+      {
+        "document_id": "midea-2024",
+        "page": 158,
+        "line_start": 26,
+        "line_end": 34
+      }
+    ],
+    "split": "dev"
+  },
+  {
+    "case_id": "midea-q09",
+    "question": "2024年毛利率是多少？",
+    "type": "lookup",
+    "gold_evidence": [
+      {
+        "document_id": "midea-2024",
+        "page": 51,
+        "line_start": 1,
+        "line_end": 17
+      },
+      {
+        "document_id": "midea-2024",
+        "page": 159,
+        "line_start": 1,
+        "line_end": 15
+      }
+    ],
+    "split": "dev"
+  },
+  {
+    "case_id": "midea-q10",
+    "question": "2024年资产负债率是多少？",
+    "type": "lookup",
+    "gold_evidence": [
+      {
+        "document_id": "midea-2024",
+        "page": 157,
+        "line_start": 39,
+        "line_end": 41
+      },
+      {
+        "document_id": "midea-2024",
+        "page": 158,
+        "line_start": 26,
+        "line_end": 34
+      }
+    ],
+    "split": "dev"
+  }
+]

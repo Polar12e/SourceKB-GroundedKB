@@ -17,6 +17,7 @@ ROOT = pathlib.Path(__file__).resolve().parents[1]
 SCHEMAS = ROOT / "contracts" / "schemas"
 EXAMPLES = ROOT / "contracts" / "examples"
 OPENAPI = ROOT / "contracts" / "openapi.yaml"
+EVAL_DATASETS = ROOT / "eval" / "datasets"
 
 
 def load_json(path: pathlib.Path) -> dict:
@@ -64,6 +65,30 @@ def main() -> int:
         for error in errors:
             failures.append(f"{path.name}: {error.json_path}: {error.message}")
 
+    eval_cases = 0
+    eval_schema = schemas.get("eval-case")
+    if eval_schema is not None:
+        for path in sorted(EVAL_DATASETS.glob("*.json")):
+            try:
+                cases = load_json(path)
+            except json.JSONDecodeError as exc:
+                failures.append(f"{path.name}: invalid JSON: {exc}")
+                continue
+            if not isinstance(cases, list):
+                failures.append(f"{path.name}: expected a JSON array")
+                continue
+            validator = Draft202012Validator(eval_schema, registry=registry)
+            for position, case in enumerate(cases):
+                errors = sorted(
+                    validator.iter_errors(case),
+                    key=lambda err: list(err.path),
+                )
+                for error in errors:
+                    failures.append(
+                        f"{path.name}[{position}]: {error.json_path}: {error.message}"
+                    )
+                eval_cases += 1
+
     if not OPENAPI.exists():
         failures.append("contracts/openapi.yaml: missing")
     else:
@@ -95,7 +120,7 @@ def main() -> int:
 
     print(
         f"contracts OK: {len(schemas)} schemas, "
-        f"{len(example_paths)} examples, OpenAPI 3.1.0"
+        f"{len(example_paths)} examples, {eval_cases} eval cases, OpenAPI 3.1.0"
     )
     return 0
 

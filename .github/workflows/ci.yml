@@ -42,8 +42,8 @@ jobs:
           pip install -r requirements-dev.txt
       - name: Contract checks
         run: python scripts/check_contracts.py
-      - name: Retrieval worker tests
-        run: python -m pytest workers
+      - name: Worker and eval tests
+        run: python -m pytest workers eval
 
   compose:
     name: Compose config

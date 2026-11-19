@@ -117,7 +117,7 @@ grounded-kb/
 └─ tests/                     # 跨服务测试（待建）
 ```
 
-当前已有 Go 服务骨架、Python retrieval 服务、契约 v0 草案、10 文档本地语料、Compose/Dockerfile 与 CI 骨架；ingest、Agent 业务、benchmark 与 Web 待落地。
+当前已有 Go 服务骨架、Python retrieval 服务、契约 v0 草案、10 文档本地语料、10 题 retrieval eval、Compose/Dockerfile 与 CI 骨架；ingest、Agent 业务与 Web 待落地。
 
 ---
 
@@ -138,7 +138,8 @@ grounded-kb/
 - [ ] Xiaomi 3 份 OCR 重抽取
 - [ ] 第一个 ingest pipeline（数据库/索引服务）
 - [ ] Agent 业务、引用校验与拒答
-- [ ] 第一个 10 题 benchmark
+- [x] 第一个 10 题 retrieval benchmark（Midea；Hit@4=1.000 / Recall@4=0.975 / MRR=1.000）
+- [ ] 跨文档 10 题 benchmark（腾讯/中芯/小米）
 - [ ] 第一个 Web/API demo
 
 ---
@@ -190,10 +191,11 @@ docker compose -f deploy/compose.yaml up --build
 
 当前会话无法连接 Docker socket；`up` 请在宿主机终端执行。
 
-后续启用（代码落地后）：
+Retrieval eval：
 
 ```bash
-python -m eval.run --dataset finance_v1
+make eval
+# Hit@4=1.000 / Recall@4=0.975 / MRR=1.000（Midea 10 题）
 ```
 
 设计背景与迁移边界见：
@@ -201,6 +203,7 @@ python -m eval.run --dataset finance_v1
 - [docs/architecture.md](docs/architecture.md)
 - [docs/migration-from-annual-report.md](docs/migration-from-annual-report.md)
 - [contracts/README.md](contracts/README.md)
+- [eval/README.md](eval/README.md)
 - [deploy/README.md](deploy/README.md)
 - [workers/retrieval/README.md](workers/retrieval/README.md)
 - [HANDOVER.md](HANDOVER.md)

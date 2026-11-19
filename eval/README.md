@@ -1,17 +1,49 @@
-# eval（待建）
+# eval（进行中）
 
-Benchmark runner 与基准数据。
+Retrieval benchmark 与评测入口。
 
-第一版目标：
+## 当前数据集
 
-- 10 文档 / 10 题起步；
-- 100 文档 / 100 题为目标；
-- 题目字段：`type`、`gold_evidence`、`expected`、`split`；
-- 指标：
-  - Hit@4 / Recall@4 / MRR
-  - citation precision / recall
-  - faithfulness
-  - abstention recall / false-answer rate
-  - tokens / latency / cost
+| 文件 | 内容 |
+|---|---|
+| `datasets/finance_midea_v1.json` | 10 条 Midea 2024 EvalCase（q01–q10），page/line Gold Evidence |
 
-真实 LLM 评测必须显式 `--live`；CI 只跑离线/fake baseline。
+## 运行
+
+```bash
+make py-test                 # 含 eval metrics 测试
+source .venv/bin/activate
+python -m eval.run_retrieval
+```
+
+默认使用 `data/private/corpus/midea-2024.jsonl`（与旧项目 baseline 同 corpus），输出：
+
+- `eval-results/retrieval_midea_v1.md`
+- `eval-results/retrieval_midea_v1.json`
+
+这些输出在 `.gitignore` 中，不提交。
+
+## 指标
+
+- Hit@4：top-4 是否命中任一 gold page
+- Recall@4：gold pages 被 top-4 覆盖的比例
+- MRR：第一个 gold page 的倒数排名
+- precision@4：top-4 中 gold page 的比例
+
+## Baseline（2026-11-19）
+
+`finance_midea_v1` / Midea corpus：
+
+| 指标 | 旧项目 `bm25` | 新服务（finance profile） |
+|---|---:|---:|
+| Hit@4 | 1.000 | **1.000** |
+| Recall@4 | 0.975 | **0.975** |
+| MRR | 1.000 | **1.000** |
+
+新服务与旧 baseline 一致；输出在 `eval-results/`（不提交）。
+
+## 后续
+
+- 补腾讯/中芯/小米的跨文档题（M1 10 文档）；
+- 对照旧项目 baseline 记录；
+- 接 citation/faithfulness/abstention。
