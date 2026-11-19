@@ -77,6 +77,9 @@ def test_search_rejects_unknown_filter() -> None:
     )
 
     assert response.status_code == 400
+    body = response.json()
+    assert body["error"]["code"] == "invalid_request"
+    assert "unknown filter" in body["error"]["message"]
 
 
 def test_search_rejects_empty_query() -> None:

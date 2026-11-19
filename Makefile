@@ -23,7 +23,7 @@ export PIP_CACHE_DIR
 
 SERVICES := gateway ingest agent model-gateway
 
-.PHONY: help env fmt tidy vet test check build clean run-gateway run-ingest run-agent run-model-gateway run-local \
+.PHONY: help env fmt tidy vet test check build clean run-gateway run-ingest run-agent run-model-gateway run-local test-system \
 	py-install py-test contracts test-all check-all compose-config py-run-retrieval eval eval-ab eval-crossdoc ci
 
 help:
@@ -37,6 +37,7 @@ help:
 	@echo "    make build      build service binaries into bin/"
 	@echo "    make run-gateway / run-ingest / run-agent / run-model-gateway"
 	@echo "    make run-local  start retrieval + agent + gateway"
+	@echo "    make test-system  run black-box system tests on fixtures"
 	@echo "  Python:"
 	@echo "    make py-install install Python dev dependencies into .venv/"
 	@echo "    make py-test    run retrieval worker tests"
@@ -95,6 +96,9 @@ run-model-gateway:
 
 run-local:
 	./scripts/run_local.sh
+
+test-system:
+	./scripts/run_system_tests.sh
 
 py-install:
 	python3 -m venv $(VENV)

@@ -10,7 +10,8 @@ from __future__ import annotations
 import os
 from pathlib import Path
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
 from .config import load_config
@@ -78,6 +79,18 @@ def create_app(index=None) -> FastAPI:
     active = index if index is not None else _default_index()
     application = FastAPI(title="GroundedKB Retrieval", version="0.1.0")
     application.state.index = active
+
+    @application.exception_handler(HTTPException)
+    async def http_error(_request: Request, exc: HTTPException) -> JSONResponse:
+        return JSONResponse(
+            status_code=exc.status_code,
+            content={
+                "error": {
+                    "code": "invalid_request",
+                    "message": str(exc.detail),
+                }
+            },
+        )
 
     @application.get("/healthz", response_model=Health, tags=["system"])
     def healthz() -> Health:

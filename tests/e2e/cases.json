@@ -1,0 +1,122 @@
+[
+  {
+    "id": "health_gateway",
+    "service": "gateway",
+    "method": "GET",
+    "path": "/healthz",
+    "expect": {"status": 200, "json_contains": {"status": "ok", "service": "gateway"}}
+  },
+  {
+    "id": "health_retrieval",
+    "service": "retrieval",
+    "method": "GET",
+    "path": "/healthz",
+    "expect": {"status": 200, "json_contains": {"status": "ok", "service": "retrieval"}}
+  },
+  {
+    "id": "health_agent",
+    "service": "agent",
+    "method": "GET",
+    "path": "/healthz",
+    "expect": {"status": 200, "json_contains": {"status": "ok", "service": "agent"}}
+  },
+  {
+    "id": "search_expanded_hit",
+    "service": "gateway",
+    "method": "POST",
+    "path": "/search",
+    "body": {"query": "营业收入", "top_k": 3},
+    "expect": {
+      "status": 200,
+      "hits_nonempty": true,
+      "first_hit_document": "midea-2024",
+      "first_hit_page": 1,
+      "all_hits_have": ["chunk_id", "document_id", "text", "locator", "anchor", "anchor_text", "channels", "score"],
+      "all_hit_channels_include": "expanded",
+      "anchor_within_locator": true,
+      "anchor_text_nonempty": true
+    }
+  },
+  {
+    "id": "search_metadata_filter",
+    "service": "gateway",
+    "method": "POST",
+    "path": "/search",
+    "body": {"query": "收入", "top_k": 3, "filters": {"company": "00700.HK"}},
+    "expect": {
+      "status": 200,
+      "hits_nonempty": true,
+      "all_hit_documents": ["tencent-2025"],
+      "all_hits_have": ["anchor", "anchor_text", "channels"]
+    }
+  },
+  {
+    "id": "search_oov_empty",
+    "service": "gateway",
+    "method": "POST",
+    "path": "/search",
+    "body": {"query": "qwertyuiop", "top_k": 3},
+    "expect": {"status": 200, "hits_empty": true}
+  },
+  {
+    "id": "search_unknown_filter_error",
+    "service": "retrieval",
+    "method": "POST",
+    "path": "/search",
+    "body": {"query": "收入", "filters": {"unknown": "x"}},
+    "expect": {"status": 400, "error_shape": true, "error_code": "invalid_request"}
+  },
+  {
+    "id": "search_empty_query_validation",
+    "service": "retrieval",
+    "method": "POST",
+    "path": "/search",
+    "body": {"query": "", "top_k": 2},
+    "expect": {"status": 422}
+  },
+  {
+    "id": "ask_extractive_answer",
+    "service": "gateway",
+    "method": "POST",
+    "path": "/ask",
+    "body": {"question": "2023年营业成本为什么重述？", "top_k": 3},
+    "expect": {
+      "status": 200,
+      "answer_status": "ok",
+      "answer_no_line_prefix": true,
+      "citations_min": 1,
+      "citation_fields": ["document_id", "page", "line_start", "line_end", "quote"],
+      "citation_quote_nonempty": true,
+      "citation_quote_no_line_prefix": true
+    }
+  },
+  {
+    "id": "ask_metadata_filter",
+    "service": "agent",
+    "method": "POST",
+    "path": "/ask",
+    "body": {"question": "收入是多少？", "top_k": 2, "filters": {"company": "00700.HK"}},
+    "expect": {
+      "status": 200,
+      "answer_status": "ok",
+      "citations_min": 1,
+      "first_citation_document": "tencent-2025"
+    }
+  },
+  {
+    "id": "ask_abstains_oov",
+    "service": "gateway",
+    "method": "POST",
+    "path": "/ask",
+    "body": {"question": "qwertyuiop", "top_k": 2},
+    "expect": {"status": 200, "answer_status": "insufficient_evidence", "citations_count": 0}
+  },
+  {
+    "id": "ask_empty_question",
+    "service": "agent",
+    "method": "POST",
+    "path": "/ask",
+    "body": {"question": "  "},
+    "expect": {"status": 400, "error_shape": true, "error_code": "invalid_request"}
+  }
+]

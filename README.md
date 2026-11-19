@@ -145,6 +145,7 @@ grounded-kb/
 - [x] Compose + Dockerfile（`config` 校验通过；未在会话内运行）
 - [x] CI 骨架
 - [x] 88 个 Python 测试 + Go service/proxy/agent 测试
+- [x] 12 条黑盒系统测试：retrieval/agent/gateway + 错误契约
 - [ ] 契约 v0 评审冻结
 - [x] Xiaomi 3 份 OCR：415/127/127 页，已合入 corpus，manifest=ocr
 - [ ] 第一个 ingest pipeline（数据库/索引服务）
@@ -244,6 +245,7 @@ make eval          # Midea 10 题
 make eval-ab       # Midea 四通路 A/B
 make eval-crossdoc # 跨文档 40 题，按 company/split 分组
 make check-all     # Go + Python + contracts + compose config
+make test-system   # 12 条黑盒系统测试（fixture）
 ```
 
 Midea baseline：**Hit@4=1.000 / Recall@4=0.975 / MRR=1.000**。跨文档结论与失败分析见 [eval/reports/channels_crossdoc_v1.md](eval/reports/channels_crossdoc_v1.md)。

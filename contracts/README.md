@@ -72,3 +72,7 @@ python scripts/check_contracts.py
 - `channels`：参与投票的通道列表。
 
 `Answer.status` 增加 `unverified` / `conflicting_evidence`。
+
+## 错误响应
+
+`/search` 的 400 已统一为 `{"error":{"code","message"}}`；系统测试 `tests/e2e` 会校验该 envelope。
