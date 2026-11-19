@@ -29,7 +29,15 @@ python -m eval.run_retrieval
 make eval-ab
 ```
 
-默认对比 `bm25` / `expanded` / `dense` / `hybrid`，报告见 [reports/channels_midea_v1.md](reports/channels_midea_v1.md)。当前结论：默认 `expanded`；LSA dense 不优于纯 BM25，hybrid 暂不默认。
+默认对比 `bm25` / `expanded` / `dense` / `hybrid`，Midea 报告见 [reports/channels_midea_v1.md](reports/channels_midea_v1.md)。
+
+## 跨文档 A/B
+
+```bash
+make eval-crossdoc
+```
+
+40 题、7 份高质文档、按 company/split 分组；报告见 [reports/channels_crossdoc_v1.md](reports/channels_crossdoc_v1.md)。当前没有通道通过默认切换门槛，默认保持 `expanded`。
 
 ## 指标
 

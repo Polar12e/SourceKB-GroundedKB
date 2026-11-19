@@ -1,0 +1,804 @@
+[
+  {
+    "case_id": "midea-q01",
+    "question": "2023年营业成本为什么重述？影响多少？",
+    "type": "explain",
+    "gold_evidence": [
+      {
+        "document_id": "midea-2024",
+        "page": 199,
+        "line_start": 1,
+        "line_end": 16
+      },
+      {
+        "document_id": "midea-2024",
+        "page": 126,
+        "line_start": 16,
+        "line_end": 24
+      },
+      {
+        "document_id": "midea-2024",
+        "page": 355,
+        "line_start": 1,
+        "line_end": 16
+      },
+      {
+        "document_id": "midea-2024",
+        "page": 159,
+        "line_start": 1,
+        "line_end": 15
+      }
+    ],
+    "split": "dev",
+    "filters": {
+      "company": "000333.SZ",
+      "year": "2024",
+      "doc_type": "annual_report"
+    }
+  },
+  {
+    "case_id": "midea-q02",
+    "question": "质保费重分类对2023年营业成本的影响金额是多少？",
+    "type": "explain",
+    "gold_evidence": [
+      {
+        "document_id": "midea-2024",
+        "page": 199,
+        "line_start": 1,
+        "line_end": 16
+      },
+      {
+        "document_id": "midea-2024",
+        "page": 126,
+        "line_start": 16,
+        "line_end": 24
+      },
+      {
+        "document_id": "midea-2024",
+        "page": 355,
+        "line_start": 1,
+        "line_end": 16
+      }
+    ],
+    "split": "dev",
+    "filters": {
+      "company": "000333.SZ",
+      "year": "2024",
+      "doc_type": "annual_report"
+    }
+  },
+  {
+    "case_id": "midea-q03",
+    "question": "2024年营业收入是多少？",
+    "type": "lookup",
+    "gold_evidence": [
+      {
+        "document_id": "midea-2024",
+        "page": 159,
+        "line_start": 1,
+        "line_end": 15
+      }
+    ],
+    "split": "dev",
+    "filters": {
+      "company": "000333.SZ",
+      "year": "2024",
+      "doc_type": "annual_report"
+    }
+  },
+  {
+    "case_id": "midea-q04",
+    "question": "2024年营业成本是多少？",
+    "type": "lookup",
+    "gold_evidence": [
+      {
+        "document_id": "midea-2024",
+        "page": 159,
+        "line_start": 1,
+        "line_end": 15
+      }
+    ],
+    "split": "dev",
+    "filters": {
+      "company": "000333.SZ",
+      "year": "2024",
+      "doc_type": "annual_report"
+    }
+  },
+  {
+    "case_id": "midea-q05",
+    "question": "2024年归属于母公司股东的净利润是多少？",
+    "type": "lookup",
+    "gold_evidence": [
+      {
+        "document_id": "midea-2024",
+        "page": 159,
+        "line_start": 39,
+        "line_end": 48
+      }
+    ],
+    "split": "dev",
+    "filters": {
+      "company": "000333.SZ",
+      "year": "2024",
+      "doc_type": "annual_report"
+    }
+  },
+  {
+    "case_id": "midea-q06",
+    "question": "2024年经营活动产生的现金流量净额是多少？",
+    "type": "lookup",
+    "gold_evidence": [
+      {
+        "document_id": "midea-2024",
+        "page": 161,
+        "line_start": 20,
+        "line_end": 25
+      }
+    ],
+    "split": "dev",
+    "filters": {
+      "company": "000333.SZ",
+      "year": "2024",
+      "doc_type": "annual_report"
+    }
+  },
+  {
+    "case_id": "midea-q07",
+    "question": "2024年末资产总计是多少？",
+    "type": "lookup",
+    "gold_evidence": [
+      {
+        "document_id": "midea-2024",
+        "page": 157,
+        "line_start": 39,
+        "line_end": 41
+      }
+    ],
+    "split": "dev",
+    "filters": {
+      "company": "000333.SZ",
+      "year": "2024",
+      "doc_type": "annual_report"
+    }
+  },
+  {
+    "case_id": "midea-q08",
+    "question": "2024年末负债合计是多少？",
+    "type": "lookup",
+    "gold_evidence": [
+      {
+        "document_id": "midea-2024",
+        "page": 158,
+        "line_start": 26,
+        "line_end": 34
+      }
+    ],
+    "split": "dev",
+    "filters": {
+      "company": "000333.SZ",
+      "year": "2024",
+      "doc_type": "annual_report"
+    }
+  },
+  {
+    "case_id": "midea-q09",
+    "question": "2024年毛利率是多少？",
+    "type": "lookup",
+    "gold_evidence": [
+      {
+        "document_id": "midea-2024",
+        "page": 51,
+        "line_start": 1,
+        "line_end": 17
+      },
+      {
+        "document_id": "midea-2024",
+        "page": 159,
+        "line_start": 1,
+        "line_end": 15
+      }
+    ],
+    "split": "dev",
+    "filters": {
+      "company": "000333.SZ",
+      "year": "2024",
+      "doc_type": "annual_report"
+    }
+  },
+  {
+    "case_id": "midea-q10",
+    "question": "2024年资产负债率是多少？",
+    "type": "lookup",
+    "gold_evidence": [
+      {
+        "document_id": "midea-2024",
+        "page": 157,
+        "line_start": 39,
+        "line_end": 41
+      },
+      {
+        "document_id": "midea-2024",
+        "page": 158,
+        "line_start": 26,
+        "line_end": 34
+      }
+    ],
+    "split": "dev",
+    "filters": {
+      "company": "000333.SZ",
+      "year": "2024",
+      "doc_type": "annual_report"
+    }
+  },
+  {
+    "case_id": "tencent-2025-01",
+    "question": "腾讯控股2025年年度收入是多少？",
+    "type": "lookup",
+    "filters": {
+      "company": "00700.HK",
+      "year": "2025",
+      "doc_type": "annual_report"
+    },
+    "gold_evidence": [
+      {
+        "document_id": "tencent-2025",
+        "page": 9,
+        "line_start": 4,
+        "line_end": 4
+      }
+    ],
+    "split": "dev"
+  },
+  {
+    "case_id": "tencent-2025-02",
+    "question": "腾讯控股2025年毛利是多少？",
+    "type": "lookup",
+    "filters": {
+      "company": "00700.HK",
+      "year": "2025",
+      "doc_type": "annual_report"
+    },
+    "gold_evidence": [
+      {
+        "document_id": "tencent-2025",
+        "page": 10,
+        "line_start": 4,
+        "line_end": 4
+      }
+    ],
+    "split": "dev"
+  },
+  {
+    "case_id": "tencent-2025-03",
+    "question": "腾讯控股2025年本公司权益持有人应占盈利是多少？",
+    "type": "lookup",
+    "filters": {
+      "company": "00700.HK",
+      "year": "2025",
+      "doc_type": "annual_report"
+    },
+    "gold_evidence": [
+      {
+        "document_id": "tencent-2025",
+        "page": 5,
+        "line_start": 6,
+        "line_end": 6
+      }
+    ],
+    "split": "dev"
+  },
+  {
+    "case_id": "tencent-2025-04",
+    "question": "腾讯控股2025年第四季度收入是多少？",
+    "type": "lookup",
+    "filters": {
+      "company": "00700.HK",
+      "year": "2025",
+      "doc_type": "annual_report"
+    },
+    "gold_evidence": [
+      {
+        "document_id": "tencent-2025",
+        "page": 13,
+        "line_start": 4,
+        "line_end": 4
+      }
+    ],
+    "split": "dev"
+  },
+  {
+    "case_id": "tencent-2025-05",
+    "question": "腾讯控股2025年末期股息每股多少港元？",
+    "type": "lookup",
+    "filters": {
+      "company": "00700.HK",
+      "year": "2025",
+      "doc_type": "annual_report"
+    },
+    "gold_evidence": [
+      {
+        "document_id": "tencent-2025",
+        "page": 7,
+        "line_start": 18,
+        "line_end": 18
+      }
+    ],
+    "split": "dev"
+  },
+  {
+    "case_id": "tencent-2025-06",
+    "question": "腾讯控股2025年增值服务业务收入是多少？",
+    "type": "lookup",
+    "filters": {
+      "company": "00700.HK",
+      "year": "2025",
+      "doc_type": "annual_report"
+    },
+    "gold_evidence": [
+      {
+        "document_id": "tencent-2025",
+        "page": 9,
+        "line_start": 46,
+        "line_end": 46
+      }
+    ],
+    "split": "dev"
+  },
+  {
+    "case_id": "tencent-2025-07",
+    "question": "腾讯控股2025年营销服务业务收入是多少？",
+    "type": "lookup",
+    "filters": {
+      "company": "00700.HK",
+      "year": "2025",
+      "doc_type": "annual_report"
+    },
+    "gold_evidence": [
+      {
+        "document_id": "tencent-2025",
+        "page": 9,
+        "line_start": 53,
+        "line_end": 53
+      }
+    ],
+    "split": "dev"
+  },
+  {
+    "case_id": "tencent-2025-08",
+    "question": "腾讯控股2025年金融科技及企业服务业务收入是多少？",
+    "type": "lookup",
+    "filters": {
+      "company": "00700.HK",
+      "year": "2025",
+      "doc_type": "annual_report"
+    },
+    "gold_evidence": [
+      {
+        "document_id": "tencent-2025",
+        "page": 9,
+        "line_start": 59,
+        "line_end": 59
+      }
+    ],
+    "split": "dev"
+  },
+  {
+    "case_id": "tencent-2025-09",
+    "question": "腾讯控股2025年利息收入是多少？",
+    "type": "lookup",
+    "filters": {
+      "company": "00700.HK",
+      "year": "2025",
+      "doc_type": "annual_report"
+    },
+    "gold_evidence": [
+      {
+        "document_id": "tencent-2025",
+        "page": 11,
+        "line_start": 9,
+        "line_end": 9
+      }
+    ],
+    "split": "holdout"
+  },
+  {
+    "case_id": "tencent-2025h1-01",
+    "question": "腾讯控股2025年第二季度收入是多少？",
+    "type": "lookup",
+    "filters": {
+      "company": "00700.HK",
+      "year": "2025",
+      "doc_type": "interim_report"
+    },
+    "gold_evidence": [
+      {
+        "document_id": "tencent-2025h1",
+        "page": 10,
+        "line_start": 4,
+        "line_end": 4
+      }
+    ],
+    "split": "dev"
+  },
+  {
+    "case_id": "tencent-2025h1-02",
+    "question": "腾讯控股2025年第二季度毛利是多少？",
+    "type": "lookup",
+    "filters": {
+      "company": "00700.HK",
+      "year": "2025",
+      "doc_type": "interim_report"
+    },
+    "gold_evidence": [
+      {
+        "document_id": "tencent-2025h1",
+        "page": 11,
+        "line_start": 6,
+        "line_end": 6
+      }
+    ],
+    "split": "dev"
+  },
+  {
+    "case_id": "tencent-2025h1-03",
+    "question": "腾讯控股2025年第二季度本公司权益持有人应占盈利是多少？",
+    "type": "lookup",
+    "filters": {
+      "company": "00700.HK",
+      "year": "2025",
+      "doc_type": "interim_report"
+    },
+    "gold_evidence": [
+      {
+        "document_id": "tencent-2025h1",
+        "page": 6,
+        "line_start": 6,
+        "line_end": 7
+      }
+    ],
+    "split": "holdout"
+  },
+  {
+    "case_id": "tencent-2025h1-04",
+    "question": "腾讯控股2025年第二季度销售及市场推广开支是多少？",
+    "type": "lookup",
+    "filters": {
+      "company": "00700.HK",
+      "year": "2025",
+      "doc_type": "interim_report"
+    },
+    "gold_evidence": [
+      {
+        "document_id": "tencent-2025h1",
+        "page": 12,
+        "line_start": 4,
+        "line_end": 4
+      }
+    ],
+    "split": "holdout"
+  },
+  {
+    "case_id": "tencent-2026h1-01",
+    "question": "腾讯控股2026年第二季度收入是多少？",
+    "type": "lookup",
+    "filters": {
+      "company": "00700.HK",
+      "year": "2026",
+      "doc_type": "interim_report"
+    },
+    "gold_evidence": [
+      {
+        "document_id": "tencent-2026h1",
+        "page": 10,
+        "line_start": 4,
+        "line_end": 4
+      }
+    ],
+    "split": "dev"
+  },
+  {
+    "case_id": "tencent-2026h1-02",
+    "question": "腾讯控股2026年第二季度经营盈利是多少？",
+    "type": "lookup",
+    "filters": {
+      "company": "00700.HK",
+      "year": "2026",
+      "doc_type": "interim_report"
+    },
+    "gold_evidence": [
+      {
+        "document_id": "tencent-2026h1",
+        "page": 12,
+        "line_start": 8,
+        "line_end": 8
+      }
+    ],
+    "split": "holdout"
+  },
+  {
+    "case_id": "smic-2023-01",
+    "question": "中芯国际2023年收入是多少美元？",
+    "type": "lookup",
+    "filters": {
+      "company": "00981.HK",
+      "year": "2023",
+      "doc_type": "annual_report"
+    },
+    "gold_evidence": [
+      {
+        "document_id": "smic-2023",
+        "page": 11,
+        "line_start": 11,
+        "line_end": 11
+      }
+    ],
+    "split": "dev"
+  },
+  {
+    "case_id": "smic-2023-02",
+    "question": "中芯国际2023年毛利率是多少？",
+    "type": "lookup",
+    "filters": {
+      "company": "00981.HK",
+      "year": "2023",
+      "doc_type": "annual_report"
+    },
+    "gold_evidence": [
+      {
+        "document_id": "smic-2023",
+        "page": 11,
+        "line_start": 11,
+        "line_end": 11
+      }
+    ],
+    "split": "dev"
+  },
+  {
+    "case_id": "smic-2023-03",
+    "question": "中芯国际2023年末总资产是多少美元？",
+    "type": "lookup",
+    "filters": {
+      "company": "00981.HK",
+      "year": "2023",
+      "doc_type": "annual_report"
+    },
+    "gold_evidence": [
+      {
+        "document_id": "smic-2023",
+        "page": 11,
+        "line_start": 12,
+        "line_end": 12
+      }
+    ],
+    "split": "dev"
+  },
+  {
+    "case_id": "smic-2023-04",
+    "question": "中芯国际2023年末本公司拥有人应占权益是多少美元？",
+    "type": "lookup",
+    "filters": {
+      "company": "00981.HK",
+      "year": "2023",
+      "doc_type": "annual_report"
+    },
+    "gold_evidence": [
+      {
+        "document_id": "smic-2023",
+        "page": 11,
+        "line_start": 12,
+        "line_end": 12
+      }
+    ],
+    "split": "holdout"
+  },
+  {
+    "case_id": "smic-2023-05",
+    "question": "中芯国际2023年折合8吋月产能是多少万片？",
+    "type": "lookup",
+    "filters": {
+      "company": "00981.HK",
+      "year": "2023",
+      "doc_type": "annual_report"
+    },
+    "gold_evidence": [
+      {
+        "document_id": "smic-2023",
+        "page": 11,
+        "line_start": 13,
+        "line_end": 13
+      }
+    ],
+    "split": "holdout"
+  },
+  {
+    "case_id": "smic-2024-01",
+    "question": "中芯国际2024年销售收入是多少美元？",
+    "type": "lookup",
+    "filters": {
+      "company": "00981.HK",
+      "year": "2024",
+      "doc_type": "annual_report"
+    },
+    "gold_evidence": [
+      {
+        "document_id": "smic-2024",
+        "page": 11,
+        "line_start": 8,
+        "line_end": 8
+      }
+    ],
+    "split": "dev"
+  },
+  {
+    "case_id": "smic-2024-02",
+    "question": "中芯国际2024年销售收入同比增长多少？",
+    "type": "lookup",
+    "filters": {
+      "company": "00981.HK",
+      "year": "2024",
+      "doc_type": "annual_report"
+    },
+    "gold_evidence": [
+      {
+        "document_id": "smic-2024",
+        "page": 11,
+        "line_start": 8,
+        "line_end": 8
+      }
+    ],
+    "split": "dev"
+  },
+  {
+    "case_id": "smic-2024-03",
+    "question": "中芯国际2024年毛利率是多少？",
+    "type": "lookup",
+    "filters": {
+      "company": "00981.HK",
+      "year": "2024",
+      "doc_type": "annual_report"
+    },
+    "gold_evidence": [
+      {
+        "document_id": "smic-2024",
+        "page": 11,
+        "line_start": 9,
+        "line_end": 9
+      }
+    ],
+    "split": "dev"
+  },
+  {
+    "case_id": "smic-2024-04",
+    "question": "中芯国际2024年产能利用率是多少？",
+    "type": "lookup",
+    "filters": {
+      "company": "00981.HK",
+      "year": "2024",
+      "doc_type": "annual_report"
+    },
+    "gold_evidence": [
+      {
+        "document_id": "smic-2024",
+        "page": 11,
+        "line_start": 9,
+        "line_end": 9
+      }
+    ],
+    "split": "holdout"
+  },
+  {
+    "case_id": "smic-2024-05",
+    "question": "中芯国际2024年末总资产约多少美元？",
+    "type": "lookup",
+    "filters": {
+      "company": "00981.HK",
+      "year": "2024",
+      "doc_type": "annual_report"
+    },
+    "gold_evidence": [
+      {
+        "document_id": "smic-2024",
+        "page": 11,
+        "line_start": 9,
+        "line_end": 9
+      }
+    ],
+    "split": "holdout"
+  },
+  {
+    "case_id": "smic-2025-01",
+    "question": "中芯国际2025年销售收入是多少人民币？",
+    "type": "lookup",
+    "filters": {
+      "company": "688981.SH",
+      "year": "2025",
+      "doc_type": "annual_report"
+    },
+    "gold_evidence": [
+      {
+        "document_id": "smic-2025",
+        "page": 6,
+        "line_start": 9,
+        "line_end": 9
+      }
+    ],
+    "split": "dev"
+  },
+  {
+    "case_id": "smic-2025-02",
+    "question": "中芯国际2025年销售收入同比增长多少？",
+    "type": "lookup",
+    "filters": {
+      "company": "688981.SH",
+      "year": "2025",
+      "doc_type": "annual_report"
+    },
+    "gold_evidence": [
+      {
+        "document_id": "smic-2025",
+        "page": 6,
+        "line_start": 9,
+        "line_end": 9
+      }
+    ],
+    "split": "dev"
+  },
+  {
+    "case_id": "smic-2025-03",
+    "question": "中芯国际2025年毛利率是多少？",
+    "type": "lookup",
+    "filters": {
+      "company": "688981.SH",
+      "year": "2025",
+      "doc_type": "annual_report"
+    },
+    "gold_evidence": [
+      {
+        "document_id": "smic-2025",
+        "page": 6,
+        "line_start": 11,
+        "line_end": 11
+      }
+    ],
+    "split": "holdout"
+  },
+  {
+    "case_id": "smic-2025-04",
+    "question": "中芯国际2025年研发投入是多少人民币？",
+    "type": "lookup",
+    "filters": {
+      "company": "688981.SH",
+      "year": "2025",
+      "doc_type": "annual_report"
+    },
+    "gold_evidence": [
+      {
+        "document_id": "smic-2025",
+        "page": 6,
+        "line_start": 17,
+        "line_end": 17
+      }
+    ],
+    "split": "holdout"
+  },
+  {
+    "case_id": "smic-2025-05",
+    "question": "中芯国际2025年研发投入占销售收入比例是多少？",
+    "type": "lookup",
+    "filters": {
+      "company": "688981.SH",
+      "year": "2025",
+      "doc_type": "annual_report"
+    },
+    "gold_evidence": [
+      {
+        "document_id": "smic-2025",
+        "page": 6,
+        "line_start": 17,
+        "line_end": 17
+      }
+    ],
+    "split": "holdout"
+  }
+]

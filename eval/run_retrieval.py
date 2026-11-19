@@ -144,7 +144,7 @@ def main(argv: list[str] | None = None) -> int:
     )
 
     results = [
-        evaluate_case(index.search(case["question"], top_k=args.top_k), case, args.top_k)
+        evaluate_case(index.search(case["question"], top_k=args.top_k, filters=case.get("filters")), case, args.top_k)
         for case in cases
     ]
     markdown = build_markdown(

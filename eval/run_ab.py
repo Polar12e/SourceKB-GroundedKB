@@ -31,7 +31,7 @@ def run_channel(name: str, pages, documents, config, cases, top_k: int) -> dict:
         }
     build_seconds = time.perf_counter() - started
     results = [
-        evaluate_case(index.search(case["question"], top_k=top_k), case, top_k)
+        evaluate_case(index.search(case["question"], top_k=top_k, filters=case.get("filters")), case, top_k)
         for case in cases
     ]
     total = len(results)

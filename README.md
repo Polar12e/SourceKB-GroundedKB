@@ -133,6 +133,7 @@ grounded-kb/
 - [x] Retrieval 增强：metadata filters（company/year/doc_type/document_id）+ 简繁归一
 - [x] RAG 资产：财务名词表（terms.json）/ embedding provider / dense channel + RAG notes
 - [x] 四通路通用化：bm25 / expanded / dense / hybrid 由 config/retrieval.yaml 驱动
+- [x] 跨文档 40 题 A/B：hybrid 最高但腾讯回退，默认保持 expanded
 - [x] 10 文档本地语料：PDF parser + manifest + 页级 JSONL
 - [x] 契约 v0 草案：13 个 JSON Schema + OpenAPI（待评审冻结）
 - [x] Compose + Dockerfile 骨架（`config` 校验通过；未在会话内运行）

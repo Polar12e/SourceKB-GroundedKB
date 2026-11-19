@@ -24,7 +24,7 @@ export PIP_CACHE_DIR
 SERVICES := gateway ingest agent model-gateway
 
 .PHONY: help env fmt tidy vet test check build clean run-gateway run-ingest run-agent run-model-gateway \
-	py-install py-test contracts test-all check-all compose-config py-run-retrieval eval eval-ab ci
+	py-install py-test contracts test-all check-all compose-config py-run-retrieval eval eval-ab eval-crossdoc ci
 
 help:
 	@echo "GroundedKB development commands"
@@ -42,6 +42,7 @@ help:
 	@echo "    make contracts  validate JSON Schema / OpenAPI examples"
 	@echo "    make eval       run the 10-case Midea retrieval eval"
 	@echo "    make eval-ab    A/B bm25/expanded/dense/hybrid"
+	@echo "    make eval-crossdoc  cross-document A/B with per-company groups"
 	@echo "    make py-run-retrieval"
 	@echo "  Combined:"
 	@echo "    make test-all   go test + py-test + contracts"
@@ -107,6 +108,9 @@ eval:
 
 eval-ab:
 	$(PYTHON) -m eval.run_ab
+
+eval-crossdoc:
+	$(PYTHON) -m eval.run_crossdoc
 
 py-run-retrieval:
 	$(PYTHON) -m uvicorn workers.retrieval.app:app --host 0.0.0.0 --port 8081

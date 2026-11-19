@@ -24,6 +24,12 @@
         "$ref": "evidence.schema.json"
       }
     },
+    "filters": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
     "expected": {
       "type": "object",
       "additionalProperties": false,

@@ -340,6 +340,36 @@
 - dense 待真实 embedding provider 后再评估；hybrid 的 RRF 权重后续再调。
 - 72 个 Python 测试通过。
 
+### 2026-11-19 15:53 · 跨文档 40 题 A/B
+
+**新增**
+
+- `eval/datasets/finance_crossdoc_v1.json`：40 题（Midea 10、腾讯 15、中芯 15），带 `filters` 与 page/line Gold Evidence。
+- `EvalCase` schema 增加可选 `filters`；runner 搜索时透传。
+- `eval/run_crossdoc.py` + `make eval-crossdoc`：按 company / split / filter correctness 分组。
+- 报告：`eval/reports/channels_crossdoc_v1.md`。
+
+**结果（40 题，7 份高质文档，top-4）**
+
+| 通道 | Hit@4 | Recall@4 | MRR |
+|---|---:|---:|---:|
+| bm25 | 0.650 | 0.650 | 0.490 |
+| expanded | 0.650 | 0.644 | 0.512 |
+| dense | 0.600 | 0.571 | 0.435 |
+| hybrid | **0.725** | **0.713** | **0.560** |
+
+**门槛判定**
+
+- hybrid 总体 +7.5pp，但腾讯 0.667 → 0.533（-13.3pp），不满足“各 company 不下降 >2pp”。
+- expanded 对中芯 A 股只有 0.200（bm25 0.800），profile 需要分片/重调。
+- 无通道通过默认切换门槛；**默认仍保持 expanded**，未改配置。
+- filter correctness 全部 OK；72 tests 通过；contracts 50 eval cases。
+
+**未做**
+
+- 题目仍需人工复核；SMIC A 股仅 5 题。
+- profile 分片、hybrid 权重调参；Xiaomi OCR；DB ingest。
+
 ---
 
 ## 2. 工作区清单（已读）
@@ -425,7 +455,8 @@
 | T1.8 | Retrieval 增强：metadata filters + 简繁归一 | `DONE` | company/year/doc_type/document_id 过滤；zhconv；43 tests |
 | T1.9 | 迁移 RAG 资产：完整 lexicon / embedding / dense / rag-notes | `DONE` | 63 tests；dense 可用但默认关闭（LSA 弱于 BM25） |
 | T1.10 | 四通路通用化：bm25/expanded/dense/hybrid + 配置驱动 | `DONE` | `config/retrieval.yaml` + Pydantic 校验；A/B：expanded 1.000/0.975/1.000 最优 |
-| T1.11 | 四通路 A/B 评估报告 | `DONE` | `eval/reports/channels_midea_v1.md`；默认保持 expanded |
+| T1.11 | 四通路 A/B 评估报告（Midea） | `DONE` | `eval/reports/channels_midea_v1.md`；默认保持 expanded |
+| T1.12 | 跨文档 40 题 A/B 评估 | `DONE` | `finance_crossdoc_v1.json`；hybrid 总体最高但腾讯回退，未改默认 |
 
 ### M2：Agent + 引用
 
@@ -468,7 +499,7 @@
 | 里程碑 | 验收标准 | 状态 | 主要依赖 |
 |---|---|---|---|
 | M0 契约与骨架 | `docker compose up` 可启动；`/healthz` 可用 | 进行中 | T0.5、T0.8；D3 沙箱 |
-| M1 检索切片 | 10 文档/10 题；Hit@4、Recall@4 baseline；页面/行号可回链 | 进行中 | 10 文档 + Midea 10 题 + filters/简繁 + 四通路 A/B 已完成；跨文档题/Xiaomi OCR/DB ingest 未完成 |
+| M1 检索切片 | 10 文档/10 题；Hit@4、Recall@4 baseline；页面/行号可回链 | 进行中 | 10 文档、Midea 10 题、跨文档 40 题 A/B 已完成；未通过默认切换门槛，profile 分片/Xiaomi OCR/DB ingest 未完成 |
 | M2 Agent + 引用 | 10–20 题端到端；引用可核对；无证据拒答 | 未开始 | M1；T2.1–T2.6 |
 | M3 100 文档/100 题 | 100 题 Gold Evidence；四种方案对比报告 | 未开始 | M2；T3.1–T3.4 |
 | M4 平台化 | 异步 ingest、索引重建、观测、基础 Web | 未开始 | M3 |
