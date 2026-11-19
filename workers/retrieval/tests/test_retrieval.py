@@ -2,7 +2,8 @@ from pathlib import Path
 
 import pytest
 
-from domains.finance.retrieval import FinanceRetrievalProfile
+from workers.retrieval.config import load_config
+from workers.retrieval.profile import ConfiguredProfile
 from workers.retrieval.chunking import (
     Page,
     chunk_page_spans,
@@ -13,6 +14,15 @@ from workers.retrieval.corpus import load_pages_jsonl
 from workers.retrieval.documents import DocumentMeta
 from workers.retrieval.index import BM25Index
 from workers.retrieval.windows import window_for_lines
+
+FINANCE_PROFILE = load_config()["profiles"]["finance"]
+
+
+def finance_profile(mode: str | None = None) -> ConfiguredProfile:
+    settings = dict(FINANCE_PROFILE)
+    if mode is not None:
+        settings["mode"] = mode
+    return ConfiguredProfile(settings)
 
 
 class TestTokenize:
@@ -145,33 +155,33 @@ class TestCorpus:
 
 class TestFinanceProfile:
     def test_restatement_expands_to_accounting_terms(self) -> None:
-        terms = FinanceRetrievalProfile().expanded_terms("2023年营业成本为什么重述？")
+        terms = finance_profile().expanded_terms("2023年营业成本为什么重述？")
 
         assert "会计" in terms
         assert "分类" in terms
         assert "期间" in terms
 
     def test_none_mode_disables_builtin_expansion(self) -> None:
-        profile = FinanceRetrievalProfile("none")
+        profile = finance_profile("none")
         assert profile.expanded_terms("毛利率是多少") == {}
 
     def test_lexicon_mode_adds_colloquial_terms(self) -> None:
-        profile = FinanceRetrievalProfile("lexicon")
+        profile = finance_profile("lexicon")
         terms = profile.expanded_terms("仓库里压了多少货")
         assert "存货" in terms
         assert "库存" in terms
 
     def test_auto_mode_only_rewrites_under_oov_pressure(self) -> None:
-        profile = FinanceRetrievalProfile("auto")
+        profile = finance_profile("auto")
         assert "存货" in profile.expanded_terms("仓库里压了多少货", coverage=0.2)
         assert "存货" not in profile.expanded_terms("存货是多少", coverage=0.9)
 
     def test_invalid_mode_is_rejected(self) -> None:
         with pytest.raises(ValueError, match="mode"):
-            FinanceRetrievalProfile("magic")
+            finance_profile("magic")
 
     def test_statement_prior_is_disabled_for_notes_questions(self) -> None:
-        profile = FinanceRetrievalProfile()
+        profile = finance_profile()
         page = "合并及公司利润表\n营业收入 1"
         assert profile.page_prior("营业收入是多少", page) > 0
         assert profile.page_prior("营业收入为什么变化", page) == 0
@@ -183,7 +193,7 @@ class TestFinanceProfile:
         ]
 
         generic = BM25Index.from_pages(pages)
-        finance = BM25Index.from_pages(pages, profile=FinanceRetrievalProfile())
+        finance = BM25Index.from_pages(pages, profile=finance_profile())
 
         assert generic.search("营业收入是多少")[0].page == 2
         assert finance.search("营业收入是多少")[0].page == 1

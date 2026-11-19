@@ -22,7 +22,12 @@ class StubChannel:
     def __init__(self, order: list[tuple[str, int]]) -> None:
         self.order = order
 
-    def search(self, query: str, top_k: int = 5) -> list[SearchHit]:
+    def search(
+        self,
+        query: str,
+        top_k: int = 5,
+        filters: dict[str, str] | None = None,
+    ) -> list[SearchHit]:
         return [make_hit(document_id, page) for document_id, page in self.order[:top_k]]
 
 

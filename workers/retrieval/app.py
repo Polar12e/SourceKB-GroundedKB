@@ -13,11 +13,10 @@ from pathlib import Path
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
 
-from domains.finance.retrieval import FinanceRetrievalProfile
-
+from .config import load_config
 from .corpus import load_pages_jsonl
 from .documents import load_documents_manifest
-from .index import BM25Index
+from .pipeline import build_channel
 
 
 class Health(BaseModel):
@@ -51,24 +50,21 @@ class SearchResponse(BaseModel):
     hits: list[SearchHit] = Field(default_factory=list)
 
 
-def _default_index() -> BM25Index:
+def _default_index():
+    config = load_config(os.getenv("RETRIEVAL_CONFIG"))
+    channel = os.getenv("RETRIEVAL_CHANNEL") or str(config["default_channel"])
+
     corpus = os.getenv("RETRIEVAL_CORPUS")
-    profile = FinanceRetrievalProfile(os.getenv("RETRIEVAL_EXPANSION", "builtin"))
-    if not corpus:
-        return BM25Index.from_pages([], profile=profile)
+    pages = load_pages_jsonl(Path(corpus)) if corpus else []
 
     manifest = Path(
         os.getenv("RETRIEVAL_MANIFEST", "data/manifests/documents.json")
     )
-    documents = load_documents_manifest(manifest) if manifest.exists() else None
-    return BM25Index.from_pages(
-        load_pages_jsonl(Path(corpus)),
-        profile=profile,
-        documents=documents,
-    )
+    documents = load_documents_manifest(manifest) if manifest.exists() else {}
+    return build_channel(channel, pages, documents, config)
 
 
-def create_app(index: BM25Index | None = None) -> FastAPI:
+def create_app(index=None) -> FastAPI:
     """Build the app; tests inject an index, production reads the environment."""
 
     active = index if index is not None else _default_index()

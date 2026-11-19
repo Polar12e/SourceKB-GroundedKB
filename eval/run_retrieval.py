@@ -12,9 +12,11 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from domains.finance.retrieval import FinanceRetrievalProfile  # noqa: E402
+from workers.retrieval.config import load_config  # noqa: E402
 from workers.retrieval.corpus import load_pages_jsonl  # noqa: E402
-from workers.retrieval.index import BM25Index, SearchHit  # noqa: E402
+from workers.retrieval.documents import load_documents_manifest  # noqa: E402
+from workers.retrieval.index import SearchHit  # noqa: E402
+from workers.retrieval.pipeline import build_channel  # noqa: E402
 
 DEFAULT_CASES = ROOT / "eval" / "datasets" / "finance_midea_v1.json"
 DEFAULT_CORPUS = ROOT / "data" / "private" / "corpus" / "midea-2024.jsonl"
@@ -112,6 +114,12 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--cases", type=Path, default=DEFAULT_CASES)
     parser.add_argument("--corpus", type=Path, default=DEFAULT_CORPUS)
     parser.add_argument("--top-k", type=int, default=4)
+    parser.add_argument("--channel", default=None, help="bm25|expanded|dense|hybrid")
+    parser.add_argument(
+        "--manifest",
+        type=Path,
+        default=ROOT / "data" / "manifests" / "documents.json",
+    )
     parser.add_argument("--out", type=Path, default=ROOT / "eval-results" / "retrieval_midea_v1.md")
     parser.add_argument(
         "--json-out",
@@ -123,9 +131,16 @@ def main(argv: list[str] | None = None) -> int:
     cases = load_cases(args.cases)
     if not args.corpus.exists():
         raise SystemExit(f"corpus not found: {args.corpus}")
-    index = BM25Index.from_pages(
-        load_pages_jsonl(args.corpus),
-        profile=FinanceRetrievalProfile(),
+    config = load_config()
+    pages = load_pages_jsonl(args.corpus)
+    documents = (
+        load_documents_manifest(args.manifest) if args.manifest.exists() else {}
+    )
+    index = build_channel(
+        args.channel or str(config["default_channel"]),
+        pages,
+        documents,
+        config,
     )
 
     results = [
@@ -145,6 +160,7 @@ def main(argv: list[str] | None = None) -> int:
     payload = {
         "cases": args.cases.name,
         "corpus": str(args.corpus),
+        "channel": args.channel or str(config["default_channel"]),
         "top_k": args.top_k,
         "summary": {
             "hit_at_k": sum(item.hit_at_k for item in results) / len(results),

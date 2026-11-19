@@ -23,7 +23,8 @@
 - Go 服务骨架（gateway / ingest / agent / model-gateway + `/healthz`）；
 - Python retrieval：BM25 + hit window + RRF + finance profile（`/search` 可用）；
 - Retrieval 增强：metadata filters（company/year/doc_type/document_id）+ 简繁归一；
-- RAG 资产：财务名词表（terms.json + lexicon.py）+ embedding provider + dense channel + RAG notes；
+- RAG 资产：财务名词表（terms.json）+ embedding provider + dense channel + RAG notes；
+- 四通路通用化：bm25 / expanded / dense / hybrid，由 `config/retrieval.yaml` 驱动；
 - 10 文档本地语料：PDF parser + manifest + 页级 JSONL（美的/腾讯/中芯国际/小米）；
 - 10 题 retrieval eval：Hit@4=1.000 / Recall@4=0.975 / MRR=1.000，与旧 `bm25` 一致；
 - 契约 v0 草案（13 个 JSON Schema + OpenAPI）；
@@ -184,6 +185,7 @@ grounded-kb/
 ├─ scripts/
 │  ├─ goenv.sh
 │  └─ check_contracts.py
+├─ config/                    # 四通路参数
 ├─ data/                      # manifest 提交；private 语料忽略
 ├─ eval/                      # EvalCase + retrieval eval runner
 ├─ docs/
@@ -200,12 +202,12 @@ grounded-kb/
 │  └─ model-gateway/          # Go
 ├─ internal/                  # Go 共享平台包
 ├─ workers/
-│  ├─ retrieval/              # Python 骨架
+│  ├─ retrieval/              # 四通路
 │  ├─ embedding/              # LSA / OpenAI-compatible
-│  ├─ parser/                 # 待建
-│  └─ eval/                   # 待建
-├─ core/                      # 算法/协议（text.py 已落地）
-├─ domains/finance/           # finance profile（部分落地）
+│  ├─ parser/                 # PDF + OCR
+│  └─ eval/                   # 待建（根目录 eval/ 已有 runner）
+├─ core/                      # 算法/协议（text.py + terms.py）
+├─ domains/finance/           # 财务名词配置 + 参数
 ├─ deploy/
 │  ├─ compose.yaml
 │  └─ docker/go-service.Dockerfile

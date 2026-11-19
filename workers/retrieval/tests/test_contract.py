@@ -5,7 +5,8 @@ from fastapi.testclient import TestClient
 from jsonschema import Draft202012Validator
 from referencing import Registry, Resource
 
-from domains.finance.retrieval import FinanceRetrievalProfile
+from workers.retrieval.config import load_config
+from workers.retrieval.profile import ConfiguredProfile
 from workers.retrieval.app import create_app
 from workers.retrieval.corpus import load_pages_jsonl
 from workers.retrieval.index import BM25Index
@@ -37,7 +38,7 @@ def test_health_matches_contract() -> None:
 def test_search_response_matches_contract() -> None:
     index = BM25Index.from_pages(
         load_pages_jsonl(FIXTURE),
-        profile=FinanceRetrievalProfile(),
+        profile=ConfiguredProfile(load_config()["profiles"]["finance"]),
     )
     response = TestClient(create_app(index)).post(
         "/search",

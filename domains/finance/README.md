@@ -2,12 +2,13 @@
 
 第一个 vertical：金融年报/公告。
 
-已迁移：
+## 当前配置
 
-- `terms.json`：**财务名词配置**（同组名词视为同义/近义，`expansion_weight=0.45`）；
-- `lexicon.py`：名词表加载、归一化、bigram 匹配、扩展词生成；
-- `retrieval.py`：旧 `bm25` 的 ratio/restatement 扩展 + 报表页 +18 加分；
-- 检索 profile 通过 `BM25Index(profile=FinanceRetrievalProfile())` 注入，不污染 core。
+- [`terms.json`](terms.json)：**财务名词配置**（同组名词视为同义/近义，`expansion_weight=0.45`）；
+- [`config/retrieval.yaml`](../../config/retrieval.yaml) 的 `profiles.finance`：查询模式、内置扩展、报表页标题/加分等参数；
+- 名词表转换逻辑在 [`core/retrieval/terms.py`](../../core/retrieval/terms.py)，profile 在 [`workers/retrieval/profile.py`](../../workers/retrieval/profile.py)，四通路构建在 [`workers/retrieval/pipeline.py`](../../workers/retrieval/pipeline.py)。
+
+`domains/finance` 不再包含检索算法代码，只提供 finance 数据配置。
 
 ## 名词表转换逻辑
 
@@ -32,7 +33,7 @@
 4. **候选扩展**：取该组中未在 query 字面出现的同组名词，去重并保持组顺序。
 5. **加权**：候选名词切成 token，以 `0.45` 权重加入查询；原 query token 保持 `1.0`。
    - 扩展只能补召回，不能盖过用户原词；**不替换原 query**。
-6. **模式控制**：
+6. **模式控制**（配置于 `profiles.finance.mode`）：
    - `none`：不扩展；
    - `builtin`：只用 ratio/restatement 内置词（默认）；
    - `lexicon`：总是使用名词表；

@@ -37,6 +37,8 @@ class DenseIndex:
     vectors: np.ndarray
     embedder: Embedder
     documents: dict[str, DocumentMeta]
+    window_radius: int = WINDOW_RADIUS
+    window_max_chars: int = WINDOW_MAX_CHARS
 
     def __post_init__(self) -> None:
         if self.vectors.shape[0] != len(self.chunks):
@@ -54,6 +56,8 @@ class DenseIndex:
         size: int = CHUNK_SIZE,
         overlap: int = CHUNK_OVERLAP,
         documents: Mapping[str, DocumentMeta] | None = None,
+        window_radius: int = WINDOW_RADIUS,
+        window_max_chars: int = WINDOW_MAX_CHARS,
     ) -> DenseIndex:
         page_text: dict[tuple[str, int], str] = {}
         for page in pages:
@@ -81,6 +85,8 @@ class DenseIndex:
             vectors=np.asarray(vectors, dtype=np.float32),
             embedder=embedder,
             documents=dict(documents or {}),
+            window_radius=window_radius,
+            window_max_chars=window_max_chars,
         )
 
     def page_text(self, document_id: str, page: int) -> str:
@@ -135,8 +141,8 @@ class DenseIndex:
                 chunk.line_start,
                 chunk.line_end,
                 fallback_text=chunk.text,
-                radius=WINDOW_RADIUS,
-                max_chars=WINDOW_MAX_CHARS,
+                radius=self.window_radius,
+                max_chars=self.window_max_chars,
             )
             chunk_terms = set(tokenize(chunk.text))
             matched = tuple(

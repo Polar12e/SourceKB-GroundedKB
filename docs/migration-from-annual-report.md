@@ -50,7 +50,7 @@
 | `src/contracts/financial.py` | `domains/finance/contracts` |
 | `src/data/csv_store.py` | `domains/finance/data` |
 | `src/capabilities/financial_analysis/` | `domains/finance/capabilities` |
-| `src/lexicon.py` | `domains/finance/lexicon` |
+| `src/lexicon.py` | `domains/finance/terms.json` + `core/retrieval/terms.py` |
 | `data/financial_facts.csv` | `domains/finance/data` |
 | `corpus/pages.jsonl` | `domains/finance/corpus`（确认许可） |
 | `evals/questions.json` | `domains/finance/eval`（扩题） |

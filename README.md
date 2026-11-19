@@ -89,6 +89,7 @@ grounded-kb/
 ├─ scripts/
 │  ├─ goenv.sh                # Go 缓存重定向
 │  └─ check_contracts.py      # JSON Schema / OpenAPI 校验
+├─ config/                    # 四通路参数（retrieval.yaml）
 ├─ data/                      # manifest 提交；private 语料忽略
 ├─ docs/
 │  ├─ architecture.md
@@ -104,13 +105,13 @@ grounded-kb/
 │  └─ model-gateway/
 ├─ internal/                  # Go 共享平台包（config/health/httpserver/service）
 ├─ workers/                   # Python worker
-│  ├─ retrieval/              # BM25 + hit window + RRF
+│  ├─ retrieval/              # 四通路：bm25/expanded/dense/hybrid
 │  ├─ embedding/              # LSA / OpenAI-compatible
 │  ├─ parser/                 # PDF 解析 + 可选 OCR
 │  └─ eval/                   # 待建
-├─ core/                      # 共享文本/切分（text.py 已落地）
+├─ core/                      # 共享文本/名词表/算法
 ├─ domains/
-│  └─ finance/                # finance 检索 profile（部分落地）
+│  └─ finance/                # 财务名词配置 + 参数
 ├─ deploy/                    # Compose + Dockerfile（骨架）
 │  ├─ compose.yaml
 │  └─ docker/go-service.Dockerfile
@@ -131,6 +132,7 @@ grounded-kb/
 - [x] Python retrieval：BM25 + hit window + RRF + finance profile
 - [x] Retrieval 增强：metadata filters（company/year/doc_type/document_id）+ 简繁归一
 - [x] RAG 资产：财务名词表（terms.json）/ embedding provider / dense channel + RAG notes
+- [x] 四通路通用化：bm25 / expanded / dense / hybrid 由 config/retrieval.yaml 驱动
 - [x] 10 文档本地语料：PDF parser + manifest + 页级 JSONL
 - [x] 契约 v0 草案：13 个 JSON Schema + OpenAPI（待评审冻结）
 - [x] Compose + Dockerfile 骨架（`config` 校验通过；未在会话内运行）
@@ -232,6 +234,7 @@ make eval
 | [docs/task-log.md](docs/task-log.md) | 任务 backlog、会话记录、偏差与决策 |
 | [docs/architecture.md](docs/architecture.md) | 服务边界、契约、数据流 |
 | [docs/rag-notes.md](docs/rag-notes.md) | 旧项目 RAG 实验笔记与检索取舍 |
+| [config/README.md](config/README.md) | 四通路检索参数与切换方式 |
 | [contracts/README.md](contracts/README.md) | 契约 v0、字段约定、校验方式 |
 | [data/README.md](data/README.md) | 语料 manifest 与私有数据约定 |
 | [deploy/README.md](deploy/README.md) | Compose、Dockerfile、端口 |

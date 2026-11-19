@@ -296,6 +296,27 @@
 - dense 默认接入与端到端指标（旧 LSA 实测弱于 BM25，保持默认关闭）。
 - 跨文档 10 题；小米 OCR；DB ingest。
 
+### 2026-11-19 15:37 · 四通路通用化 + 配置驱动
+
+**重构**
+
+- `config/retrieval.yaml`：四通路、BM25、window、RRF、profile、通道权重全部参数化。
+- `workers/retrieval/pipeline.py`：通用构建 `bm25` / `expanded` / `dense` / `hybrid`；hybrid 支持 filters。
+- `workers/retrieval/profile.py`：`ConfiguredProfile` 从配置读取名词表、内置扩展、报表页加分；无 domain 常量。
+- `core/retrieval/terms.py`：通用名词表加载/转换；`domains/finance/terms.json` 仅保留数据配置。
+- 删除 `domains/finance/retrieval.py` 与 `domains/finance/lexicon.py`；app/eval 改为配置驱动，默认 `expanded`。
+- `RETRIEVAL_CHANNEL` 可在运行时切换四通路；`RETRIEVAL_CONFIG` 可指定配置。
+
+**验证**
+
+- 四通路在 10 文档 corpus 上均能构建并返回结果（含 metadata filters）。
+- Midea 10 题指标保持 **Hit@4=1.000 / Recall@4=0.975 / MRR=1.000**。
+- 66 个 Python 测试通过；Midea 10 题指标保持 **Hit@4=1.000 / Recall@4=0.975 / MRR=1.000**。
+
+**未做**
+
+- dense 端到端质量（LSA 仍弱于 BM25）；跨文档题；Xiaomi OCR；DB ingest。
+
 ---
 
 ## 2. 工作区清单（已读）
@@ -311,15 +332,16 @@
 | [eval/README.md](../eval/README.md) | 数据集、检索指标、baseline | Midea 10 题 baseline 完成 |
 | [services/README.md](../services/README.md) | Go 服务边界与优先级 | 说明文件；Go 骨架已落地 |
 | [workers/README.md](../workers/README.md) | Python worker 职责与复用来源 | BM25 已落地 |
-| [core/README.md](../core/README.md) | 跨 domain 算法与协议范围 | `text.py` 已落地 |
-| [domains/finance/README.md](../domains/finance/README.md) | finance vertical 迁移范围 | retrieval profile 已落地 |
+| [core/README.md](../core/README.md) | 跨 domain 算法与协议范围 | `text.py` + `retrieval/terms.py` |
+| [domains/finance/README.md](../domains/finance/README.md) | finance vertical 迁移范围 | `terms.json` 名词配置；逻辑在通用层 |
+| [config/README.md](../config/README.md) | 四通路检索参数 | 配置驱动 |
 | [eval/README.md](../eval/README.md) | benchmark 目标、题目字段、指标 | 占位，无实现 |
 | [deploy/README.md](../deploy/README.md) | Compose、Dockerfile、端口 | 骨架已落地；未运行 |
 | [tests/README.md](../tests/README.md) | unit/contract/integration/eval/smoke 分层 | 占位，无测试 |
 | [.env.example](../.env.example) | 本地配置占位（仍为 `FIN_AGENT_*` 前缀） | 待整理（D4） |
 | [.gitignore](../.gitignore) | 已忽略 `.env`、缓存、构建产物、评测输出、`*.npz` | 可用 |
 
-截至 2026-11-19 14:51，`core/text.py`、`domains/finance/retrieval.py`、`workers/parser/`、`workers/retrieval/`、`eval/`、`data/`、`contracts/`、`deploy/`、`.github/workflows/` 已落地；`tests/` 仍为占位。工作区当前还有 `go.mod`、`Makefile`、`requirements-dev.txt`、`.dockerignore`、`.tools/`（缓存）、`.venv/`（Python 依赖）、`bin/`（构建产物）和 `data/private/`（PDF/全文/OCR，均已忽略）。
+截至 2026-11-19 15:37，`core/text.py`、`core/retrieval/terms.py`、`config/retrieval.yaml`、`workers/parser/`、`workers/retrieval/`、`workers/embedding/`、`eval/`、`data/`、`contracts/`、`deploy/`、`.github/workflows/` 已落地；`tests/` 仍为占位。工作区当前还有 `go.mod`、`Makefile`、`requirements-dev.txt`、`.dockerignore`、`.tools/`（缓存）、`.venv/`（Python 依赖）、`bin/`（构建产物）和 `data/private/`（PDF/全文/OCR，均已忽略）。
 
 ---
 
@@ -379,6 +401,7 @@
 | T1.7 | 新服务 10 题 retrieval eval，与 T1.3 baseline 对比 | `DONE` | 新服务 Hit@4=1.000 / Recall@4=0.975 / MRR=1.000，与旧 baseline 一致（Midea） |
 | T1.8 | Retrieval 增强：metadata filters + 简繁归一 | `DONE` | company/year/doc_type/document_id 过滤；zhconv；43 tests |
 | T1.9 | 迁移 RAG 资产：完整 lexicon / embedding / dense / rag-notes | `DONE` | 63 tests；dense 可用但默认关闭（LSA 弱于 BM25） |
+| T1.10 | 四通路通用化：bm25/expanded/dense/hybrid + 配置驱动 | `DONE` | `config/retrieval.yaml` + pipeline/profile；filters；四通路实测 |
 
 ### M2：Agent + 引用
 
@@ -421,7 +444,7 @@
 | 里程碑 | 验收标准 | 状态 | 主要依赖 |
 |---|---|---|---|
 | M0 契约与骨架 | `docker compose up` 可启动；`/healthz` 可用 | 进行中 | T0.5、T0.8；D3 沙箱 |
-| M1 检索切片 | 10 文档/10 题；Hit@4、Recall@4 baseline；页面/行号可回链 | 进行中 | 10 文档 + Midea 10 题 + filters/简繁 + RAG 资产已完成；跨文档题/Xiaomi OCR/DB ingest 未完成 |
+| M1 检索切片 | 10 文档/10 题；Hit@4、Recall@4 baseline；页面/行号可回链 | 进行中 | 10 文档 + Midea 10 题 + filters/简繁 + 四通路配置化已完成；跨文档题/Xiaomi OCR/DB ingest 未完成 |
 | M2 Agent + 引用 | 10–20 题端到端；引用可核对；无证据拒答 | 未开始 | M1；T2.1–T2.6 |
 | M3 100 文档/100 题 | 100 题 Gold Evidence；四种方案对比报告 | 未开始 | M2；T3.1–T3.4 |
 | M4 平台化 | 异步 ingest、索引重建、观测、基础 Web | 未开始 | M3 |

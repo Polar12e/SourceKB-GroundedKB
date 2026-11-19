@@ -78,6 +78,8 @@ class BM25Index:
         b: float = BM25_B,
         profile: QueryProfile | None = None,
         documents: Mapping[str, DocumentMeta] | None = None,
+        window_radius: int = WINDOW_RADIUS,
+        window_max_chars: int = WINDOW_MAX_CHARS,
     ) -> None:
         if k1 < 0:
             raise ValueError("k1 must be >= 0")
@@ -89,6 +91,8 @@ class BM25Index:
         self.b = b
         self.profile = profile
         self.documents = dict(documents or {})
+        self.window_radius = window_radius
+        self.window_max_chars = window_max_chars
         self.tokens = [tokenize(chunk.text) for chunk in chunks]
         self.term_counts = [Counter(tokens) for tokens in self.tokens]
         self.lengths = [len(tokens) for tokens in self.tokens]
@@ -114,6 +118,8 @@ class BM25Index:
         b: float = BM25_B,
         profile: QueryProfile | None = None,
         documents: Mapping[str, DocumentMeta] | None = None,
+        window_radius: int = WINDOW_RADIUS,
+        window_max_chars: int = WINDOW_MAX_CHARS,
     ) -> BM25Index:
         page_list = list(pages)
         page_text: dict[tuple[str, int], str] = {}
@@ -129,6 +135,8 @@ class BM25Index:
             b=b,
             profile=profile,
             documents=documents,
+            window_radius=window_radius,
+            window_max_chars=window_max_chars,
         )
 
     def page_text(self, document_id: str, page: int) -> str:
@@ -223,8 +231,8 @@ class BM25Index:
                 chunk.line_start,
                 chunk.line_end,
                 fallback_text=chunk.text,
-                radius=WINDOW_RADIUS,
-                max_chars=WINDOW_MAX_CHARS,
+                radius=self.window_radius,
+                max_chars=self.window_max_chars,
             )
             chunk_terms = set(self.tokens[index])
             matched = tuple(term for term in weights if term in chunk_terms)

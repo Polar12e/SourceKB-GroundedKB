@@ -12,7 +12,12 @@ FUSION_DEPTH = 60
 
 
 class Channel(Protocol):
-    def search(self, query: str, top_k: int = 5) -> list[SearchHit]:
+    def search(
+        self,
+        query: str,
+        top_k: int = 5,
+        filters: dict[str, str] | None = None,
+    ) -> list[SearchHit]:
         ...
 
 
@@ -41,7 +46,12 @@ class HybridIndex:
         self.k = k
         self.depth = depth
 
-    def search(self, query: str, top_k: int = 5) -> list[SearchHit]:
+    def search(
+        self,
+        query: str,
+        top_k: int = 5,
+        filters: dict[str, str] | None = None,
+    ) -> list[SearchHit]:
         if top_k <= 0 or not query.strip():
             return []
 
@@ -51,7 +61,11 @@ class HybridIndex:
         for name, channel, weight in self.channels:
             if weight <= 0:
                 continue
-            hits = channel.search(query, top_k=max(self.depth, top_k))
+            hits = channel.search(
+                query,
+                top_k=max(self.depth, top_k),
+                filters=filters,
+            )
             for rank, hit in enumerate(hits, start=1):
                 key = (hit.document_id, hit.page)
                 contribution = weight / (self.k + rank)

@@ -1,0 +1,50 @@
+default_channel: expanded
+
+bm25:
+  k1: 1.5
+  b: 0.75
+
+window:
+  radius: 2
+  max_chars: 900
+
+rrf:
+  k: 60
+  depth: 60
+
+profiles:
+  finance:
+    mode: builtin
+    term_table: domains/finance/terms.json
+    expansion_weight: 0.45
+    oov_threshold: 0.5
+    builtin_expansions:
+      毛利率: [营业收入, 营业成本]
+      资产负债率: [负债合计, 资产总计]
+      营收同比: [营业收入]
+      同比增长: [营业收入]
+      净利率: [净利润, 营业收入]
+      重述: [重分类, 会计政策变更, 可比期间]
+      质保费: [质量保证]
+    statement_titles:
+      - 合并及公司利润表
+      - 合并及公司资产负债表
+      - 合并及公司现金流量表
+      - 合并利润表
+      - 合并资产负债表
+      - 合并现金流量表
+    notes_markers: [为什么, 重述, 重分类, 影响, 附注, 会计政策, 调整]
+    statement_bonus: 18.0
+
+channels:
+  bm25:
+    profile: null
+  expanded:
+    profile: finance
+  dense:
+    provider: lsa
+    dim: 192
+  hybrid:
+    channels:
+      expanded: 1.0
+      dense: 0.5
