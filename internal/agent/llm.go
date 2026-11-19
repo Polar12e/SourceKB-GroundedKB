@@ -17,6 +17,12 @@ import (
 const (
 	extractiveWarning = "【当前为抽取式基线，尚未接入 LLM 生成】\n\n"
 	fallbackWarning   = "【LLM 调用未通过校验，以下为抽取式回答】\n\n"
+
+	// Abstention copy. These paths never reach the model, so they must not
+	// borrow the "LLM not wired" banner: the refusal is a decision, not a gap.
+	abstainNoEvidence = "【未检索到可引用的证据，已拒答】\n\n知识库中没有找到与该问题相关的原文，无法给出可溯源的答案。"
+	abstainUnverified = "【证据未通过定位校验，已拒答】\n\n检索返回的片段页码或行号不合法，不予引用。"
+	abstainByModel    = "【证据不足，已拒答】\n\n根据已检索到的证据，无法回答该问题。"
 )
 
 type chatMessage struct {
@@ -48,6 +54,29 @@ type citationIndex struct {
 }
 
 var numberPattern = regexp.MustCompile(`\d[\d,]*(?:\.\d+)?`)
+
+// Chinese-numeral years appear verbatim in the PDF tables (二零二六年), while
+// models naturally answer "2026年". Folding only four-character digit runs keeps
+// magnitude numerals such as 一千三百 from being read digit by digit.
+var (
+	chineseDigitByRune = map[rune]byte{
+		'〇': '0', '零': '0', '○': '0',
+		'一': '1', '二': '2', '三': '3', '四': '4', '五': '5',
+		'六': '6', '七': '7', '八': '8', '九': '9',
+	}
+	chineseYearPattern = regexp.MustCompile(`[〇零○一二三四五六七八九]{4}`)
+)
+
+func foldChineseYears(text string) string {
+	return chineseYearPattern.ReplaceAllStringFunc(text, func(run string) string {
+		var folded strings.Builder
+		folded.Grow(len(run))
+		for _, r := range run {
+			folded.WriteByte(chineseDigitByRune[r])
+		}
+		return folded.String()
+	})
+}
 
 func parseNumber(raw string) (float64, bool) {
 	value, err := strconv.ParseFloat(strings.ReplaceAll(raw, ",", ""), 64)
@@ -145,7 +174,7 @@ func (h *Handler) answerWithLLM(ctx context.Context, question string, hits []sea
 	}
 	if parsed.Status == "insufficient_evidence" {
 		return answer{
-			Answer:    extractiveWarning + "insufficient evidence",
+			Answer:    abstainByModel,
 			Status:    "insufficient_evidence",
 			Citations: []citation{},
 		}, nil
@@ -175,8 +204,11 @@ func (h *Handler) answerWithLLM(ctx context.Context, question string, hits []sea
 	for _, item := range chosen {
 		citedText += "\n" + item.hit.AnchorText
 	}
+	// Compare against both the raw evidence and a year-folded copy so that
+	// "2026年" in the answer is grounded by "二零二六年" in a PDF table header.
+	groundedText := citedText + "\n" + foldChineseYears(citedText)
 	for _, number := range numberPattern.FindAllString(parsed.Answer, -1) {
-		if !numberSupported(number, citedText) {
+		if !numberSupported(number, groundedText) {
 			return answer{}, fmt.Errorf("answer number %q is not present in cited evidence", number)
 		}
 	}

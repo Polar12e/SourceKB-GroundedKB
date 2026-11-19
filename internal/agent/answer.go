@@ -175,8 +175,11 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	traceID := fmt.Sprintf("trace_%d", time.Now().UnixNano())
 	if len(results.Hits) == 0 {
+		if h.llmEnabled {
+			slog.Info("llm skipped", "reason", "no retrieved hits", "trace_id", traceID)
+		}
 		writeJSON(w, http.StatusOK, answer{
-			Answer:    extractiveWarning + "insufficient evidence",
+			Answer:    abstainNoEvidence,
 			Status:    "insufficient_evidence",
 			Citations: []citation{},
 			TraceID:   traceID,
@@ -191,8 +194,11 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	if len(verified) == 0 {
+		if h.llmEnabled {
+			slog.Info("llm skipped", "reason", "no verifiable evidence", "trace_id", traceID)
+		}
 		writeJSON(w, http.StatusOK, answer{
-			Answer:    extractiveWarning + "evidence could not be verified",
+			Answer:    abstainUnverified,
 			Status:    "unverified",
 			Citations: []citation{},
 			TraceID:   traceID,

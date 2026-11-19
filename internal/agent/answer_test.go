@@ -199,3 +199,143 @@ func TestLLMAcceptsUnitConversionWhenNumberIsGrounded(t *testing.T) {
 		t.Fatalf("body = %+v", body)
 	}
 }
+
+func TestLLMAcceptsYearWrittenInChineseNumerals(t *testing.T) {
+	retrieval := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		_, _ = w.Write([]byte(`{"hits":[{"chunk_id":"doc:p47:c0","document_id":"doc","text":"window","anchor_text":"二零二六年\n遊戲 130,115\n社交網絡 64,409","locator":{"page":47,"line_start":1,"line_end":3},"anchor":{"line_start":1,"line_end":3},"channels":["expanded"],"score":2.5,"matched_terms":["遊戲"]}]}`))
+	}))
+	defer retrieval.Close()
+	model := modelWithContent(t, `{"answer":"2026年上半年游戏业务收入合计为人民币130,115百万元，社交网络收入为人民币64,409百万元。","citations":["doc:p47:c0"],"status":"ok"}`)
+	defer model.Close()
+
+	handler, err := NewHandlerWithLLM(retrieval.URL, model.URL, true)
+	if err != nil {
+		t.Fatal(err)
+	}
+	request := httptest.NewRequest(http.MethodPost, "/ask", strings.NewReader(`{"question":"2026年上半年游戏业务收入"}`))
+	response := httptest.NewRecorder()
+	handler.ServeHTTP(response, request)
+
+	var body answer
+	if err := json.Unmarshal(response.Body.Bytes(), &body); err != nil {
+		t.Fatal(err)
+	}
+	if body.Status != "ok" || strings.Contains(body.Answer, "未通过校验") || !strings.Contains(body.Answer, "130,115") {
+		t.Fatalf("body = %+v", body)
+	}
+}
+
+func TestLLMRejectsNumberAbsentFromCitedEvidence(t *testing.T) {
+	retrieval := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		_, _ = w.Write([]byte(`{"hits":[{"chunk_id":"doc:p1:c0","document_id":"doc","text":"window","anchor_text":"二零二六年 遊戲 130,115 百萬元","locator":{"page":1,"line_start":1,"line_end":2},"anchor":{"line_start":1,"line_end":2},"channels":["expanded"],"score":2.5,"matched_terms":["遊戲"]}]}`))
+	}))
+	defer retrieval.Close()
+	model := modelWithContent(t, `{"answer":"2026年遊戲收入為999,999百萬元","citations":["doc:p1:c0"],"status":"ok"}`)
+	defer model.Close()
+
+	handler, err := NewHandlerWithLLM(retrieval.URL, model.URL, true)
+	if err != nil {
+		t.Fatal(err)
+	}
+	request := httptest.NewRequest(http.MethodPost, "/ask", strings.NewReader(`{"question":"遊戲收入"}`))
+	response := httptest.NewRecorder()
+	handler.ServeHTTP(response, request)
+
+	var body answer
+	if err := json.Unmarshal(response.Body.Bytes(), &body); err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(body.Answer, "未通过校验") || !strings.Contains(body.Answer, "130,115") {
+		t.Fatalf("fallback body = %+v", body)
+	}
+}
+
+func TestAbstainsWithoutCallingModelWhenNoHits(t *testing.T) {
+	retrieval := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		_, _ = w.Write([]byte(`{"hits":[]}`))
+	}))
+	defer retrieval.Close()
+	called := false
+	model := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		called = true
+		w.WriteHeader(http.StatusInternalServerError)
+	}))
+	defer model.Close()
+
+	handler, err := NewHandlerWithLLM(retrieval.URL, model.URL, true)
+	if err != nil {
+		t.Fatal(err)
+	}
+	request := httptest.NewRequest(http.MethodPost, "/ask", strings.NewReader(`{"question":"关胜恒是算法皇帝吗？"}`))
+	response := httptest.NewRecorder()
+	handler.ServeHTTP(response, request)
+
+	var body answer
+	if err := json.Unmarshal(response.Body.Bytes(), &body); err != nil {
+		t.Fatal(err)
+	}
+	if called {
+		t.Fatal("model must not be called when retrieval returns no hits")
+	}
+	if body.Status != "insufficient_evidence" || !strings.Contains(body.Answer, "已拒答") {
+		t.Fatalf("body = %+v", body)
+	}
+	if strings.Contains(body.Answer, "尚未接入") {
+		t.Fatalf("abstention must not claim the LLM is unwired: %q", body.Answer)
+	}
+}
+
+func TestAbstainsWhenEvidenceIsUnverified(t *testing.T) {
+	retrieval := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		_, _ = w.Write([]byte(`{"hits":[{"chunk_id":"doc:p1:c0","document_id":"doc","text":"window","anchor_text":"","locator":{"page":0,"line_start":0,"line_end":0},"anchor":{"line_start":0,"line_end":0},"channels":["expanded"],"score":2.5,"matched_terms":["收入"]}]}`))
+	}))
+	defer retrieval.Close()
+	called := false
+	model := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		called = true
+		w.WriteHeader(http.StatusInternalServerError)
+	}))
+	defer model.Close()
+
+	handler, err := NewHandlerWithLLM(retrieval.URL, model.URL, true)
+	if err != nil {
+		t.Fatal(err)
+	}
+	request := httptest.NewRequest(http.MethodPost, "/ask", strings.NewReader(`{"question":"收入"}`))
+	response := httptest.NewRecorder()
+	handler.ServeHTTP(response, request)
+
+	var body answer
+	if err := json.Unmarshal(response.Body.Bytes(), &body); err != nil {
+		t.Fatal(err)
+	}
+	if called {
+		t.Fatal("model must not be called when no hit passes locator verification")
+	}
+	if body.Status != "unverified" || !strings.Contains(body.Answer, "已拒答") {
+		t.Fatalf("body = %+v", body)
+	}
+}
+
+func TestLLMDeclaredInsufficientEvidenceHasNoCitations(t *testing.T) {
+	retrieval := retrievalWithHit(t)
+	defer retrieval.Close()
+	model := modelWithContent(t, `{"answer":"","citations":[],"status":"insufficient_evidence"}`)
+	defer model.Close()
+
+	handler, err := NewHandlerWithLLM(retrieval.URL, model.URL, true)
+	if err != nil {
+		t.Fatal(err)
+	}
+	request := httptest.NewRequest(http.MethodPost, "/ask", strings.NewReader(`{"question":"关胜恒是谁？"}`))
+	response := httptest.NewRecorder()
+	handler.ServeHTTP(response, request)
+
+	var body answer
+	if err := json.Unmarshal(response.Body.Bytes(), &body); err != nil {
+		t.Fatal(err)
+	}
+	if body.Status != "insufficient_evidence" || len(body.Citations) != 0 {
+		t.Fatalf("body = %+v", body)
+	}
+}
