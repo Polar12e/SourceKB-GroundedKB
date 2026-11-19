@@ -2,8 +2,8 @@
 
 > **可溯源的 Agentic RAG 知识库平台**  
 > 技术栈：Go + Python  
-> 状态：项目脚手架 / 迁移准备中（2026-11-18）  
-> 当前没有可运行代码；先固定架构、契约、资产迁移和交接边界。
+> 状态：M1 检索切片 / 本地可运行（2026-11-19）  
+> 已打通 **Gateway → Agent → Retrieval** 本地端到端切片；ingest、Web UI、LLM 生成仍在后续。
 
 ---
 
@@ -88,37 +88,40 @@ grounded-kb/
 ├─ .github/workflows/ci.yml   # CI 骨架
 ├─ scripts/
 │  ├─ goenv.sh                # Go 缓存重定向
-│  └─ check_contracts.py      # JSON Schema / OpenAPI 校验
+│  ├─ check_contracts.py      # JSON Schema / OpenAPI 校验
+│  └─ run_local.sh            # retrieval + agent + gateway 一键启动
 ├─ config/                    # 四通路参数（retrieval.yaml）
 ├─ data/                      # manifest 提交；private 语料忽略
 ├─ docs/
 │  ├─ architecture.md
+│  ├─ rag-notes.md
+│  ├─ task-log.md
 │  └─ migration-from-annual-report.md
 ├─ contracts/                 # v0 草案
 │  ├─ openapi.yaml
 │  ├─ schemas/
 │  └─ examples/
-├─ services/                  # Go 服务（骨架）
-│  ├─ gateway/
-│  ├─ ingest/
-│  ├─ agent/
-│  └─ model-gateway/
-├─ internal/                  # Go 共享平台包（config/health/httpserver/service）
+├─ services/                  # Go 服务
+│  ├─ gateway/                # /healthz + /search + /ask 代理
+│  ├─ ingest/                 # 健康检查骨架
+│  ├─ agent/                  # /ask 抽取式回答
+│  └─ model-gateway/          # 健康检查骨架
+├─ internal/                  # Go 共享包：config/health/httpserver/service/proxy/agent
 ├─ workers/                   # Python worker
 │  ├─ retrieval/              # 四通路：bm25/expanded/dense/hybrid
 │  ├─ embedding/              # LSA / OpenAI-compatible
-│  ├─ parser/                 # PDF 解析 + 可选 OCR
-│  └─ eval/                   # 待建
+│  └─ parser/                 # PDF 解析 + 可选 OCR
+├─ eval/                      # dataset / runner / reports
 ├─ core/                      # 共享文本/名词表/算法
 ├─ domains/
 │  └─ finance/                # 财务名词配置 + 参数
-├─ deploy/                    # Compose + Dockerfile（骨架）
+├─ deploy/                    # Compose + Dockerfile
 │  ├─ compose.yaml
 │  └─ docker/go-service.Dockerfile
 └─ tests/                     # 跨服务测试（待建）
 ```
 
-当前已有 Go 服务骨架、Python retrieval 服务、契约 v0 草案、10 文档本地语料、10 题 retrieval eval、Compose/Dockerfile 与 CI 骨架；ingest、Agent 业务与 Web 待落地。
+当前可运行的是：Python retrieval（四通路 + filters + 简繁）、Go gateway/agent 本地切片、10 文档语料、Midea 10 题与跨文档 40 题评测。ingest 上传/索引、model gateway 业务、Web UI、LLM 生成仍是后续。
 
 ---
 
@@ -128,81 +131,93 @@ grounded-kb/
 - [x] 技术栈边界：Go + Python
 - [x] 架构文档
 - [x] 旧项目资产盘点与迁移原则
-- [x] Go 服务骨架：gateway / ingest / agent / model-gateway + `/healthz`
-- [x] Python retrieval：BM25 + hit window + RRF + finance profile
-- [x] Retrieval 增强：metadata filters（company/year/doc_type/document_id）+ 简繁归一
-- [x] RAG 资产：财务名词表（terms.json）/ embedding provider（lsa/openai）/ dense channel + RAG notes
+- [x] Go 服务框架：gateway / ingest / agent / model-gateway + `/healthz`
+- [x] Python retrieval：BM25 + hit window + filters + 简繁归一
 - [x] 四通路通用化：bm25 / expanded / dense / hybrid 由 config/retrieval.yaml 驱动
-- [x] 跨文档 40 题 A/B：标注修正后 hybrid 与 expanded 持平，默认保持 expanded
+- [x] Dense provider：lsa / openai（base_url/model/dim + env key + cache identity）
+- [x] RAG 资产：财务名词表（terms.json）/ LSA / OpenAI-compatible provider
 - [x] 本地端到端切片：gateway → agent → retrieval（抽取式回答 + 拒答兜底）
+- [x] Midea 10 题 benchmark：Hit@4=1.000 / Recall@4=0.975 / MRR=1.000
+- [x] 跨文档 40 题 A/B：标注修正后 hybrid 与 expanded 持平，默认保持 expanded
 - [x] 10 文档本地语料：PDF parser + manifest + 页级 JSONL
 - [x] 契约 v0 草案：13 个 JSON Schema + OpenAPI（待评审冻结）
-- [x] Compose + Dockerfile 骨架（`config` 校验通过；未在会话内运行）
+- [x] Compose + Dockerfile（`config` 校验通过；未在会话内运行）
 - [x] CI 骨架
+- [x] 84 个 Python 测试 + Go service/proxy/agent 测试
 - [ ] 契约 v0 评审冻结
-- [ ] dense / embedding 通道
 - [ ] Xiaomi 3 份 OCR 重抽取
 - [ ] 第一个 ingest pipeline（数据库/索引服务）
-- [ ] Agent 业务、引用校验与拒答
-- [x] 第一个 10 题 retrieval benchmark（Midea；Hit@4=1.000 / Recall@4=0.975 / MRR=1.000）
-- [ ] 跨文档 10 题 benchmark（腾讯/中芯/小米）
-- [ ] 第一个 Web/API demo
+- [ ] LLM 生成、引用校验与完整拒答策略（当前仅抽取式基线）
+- [ ] 40 题 `acceptable_evidence` / `hard_negatives` 人工复核
+- [ ] Web UI（HTTP API 基础已可用）
 
 ---
 
 ## 6. 快速开始
 
-当前可运行 Go 服务与 Python retrieval 服务；Compose 文件可校验，但真正 `up` 需要宿主机可访问 Docker socket。
+### 6.1 本地端到端（推荐）
 
-一条命令启动本地端到端切片（gateway → agent → retrieval）：
-
-```bash
-make run-local
-# 另开终端
-curl http://127.0.0.1:8080/healthz
-curl -X POST http://127.0.0.1:8080/search   -H 'content-type: application/json'   -d '{"query":"营业收入","top_k":3}'
-curl -X POST http://127.0.0.1:8080/ask   -H 'content-type: application/json'   -d '{"question":"2023年营业成本为什么重述？","top_k":3}'
-```
-
-`/ask` 当前是确定性抽取式基线：取 top hit 原文 + citation；无命中返回 `insufficient_evidence`。LLM 生成、引用校验与拒答策略仍在 T2。
-
-Go 服务：
-
-```bash
-source scripts/goenv.sh   # 把 Go 缓存放到 .tools/，避免 home 只读
-
-make test
-make build
-
-# 启动 gateway（默认 :8080）
-make run-gateway
-# 另开终端验证
-curl http://127.0.0.1:8080/healthz
-```
-
-其他服务：`make run-ingest`（:8082）、`make run-agent`（:8083）、`make run-model-gateway`（:8084）。
-
-Python retrieval：
+前置：Python 依赖 + Go 工具链，已解析的本地语料：
 
 ```bash
 make py-install
+source scripts/goenv.sh   # 把 Go 缓存放到 .tools/，避免 home 只读
+
+make run-local
+```
+
+会启动：
+
+| 服务 | 端口 | 说明 |
+|---|---:|---|
+| gateway | 8080 | `/healthz`、`/search`、`/ask` |
+| retrieval | 8081 | FastAPI `/search` |
+| agent | 8083 | 抽取式 `/ask` |
+
+另开终端验证：
+
+```bash
+curl http://127.0.0.1:8080/healthz
+
+curl -X POST http://127.0.0.1:8080/search \
+  -H 'content-type: application/json' \
+  -d '{"query":"营业收入","top_k":3}'
+
+curl -X POST http://127.0.0.1:8080/ask \
+  -H 'content-type: application/json' \
+  -d '{"question":"2023年营业成本为什么重述？","top_k":3}'
+```
+
+`/ask` 当前是**确定性抽取式基线**：取 top hit 原文 + citation；无命中返回 `insufficient_evidence`。LLM 生成、引用校验与完整拒答策略仍在后续。
+
+默认读取 `data/private/corpus/pages.jsonl`；如果没有 corpus，脚本会警告，`/search` 返回空、`/ask` 拒答。详细数据约定见 [data/README.md](data/README.md)。
+
+### 6.2 单独运行服务
+
+```bash
+make test          # Go 测试
+make vet
+make build
+
+make run-gateway         # :8080
+make run-agent           # :8083
+make run-ingest          # :8082（健康检查骨架）
+make run-model-gateway   # :8084（健康检查骨架）
+```
+
+注意：单独启动 gateway 时，`/search` 需要 retrieval 可达，`/ask` 需要 agent + retrieval 可达；否则返回 502。
+
+### 6.3 Python retrieval
+
+```bash
 make py-test
 make contracts
 
+# 合成 fixture
 RETRIEVAL_CORPUS=workers/retrieval/tests/fixtures/sample_pages.jsonl \
   make py-run-retrieval
-# 或使用已解析的 10 文档本地语料
-# RETRIEVAL_CORPUS=data/private/corpus/pages.jsonl make py-run-retrieval
-# 另开终端
-curl http://127.0.0.1:8081/healthz
-curl -X POST http://127.0.0.1:8081/search \
-  -H 'content-type: application/json' \
-  -d '{"query":"营业成本重述","top_k":3}'
-```
 
-10 文档 + metadata filter：
-
-```bash
+# 10 文档 + filters
 RETRIEVAL_CORPUS=data/private/corpus/pages.jsonl \
 RETRIEVAL_MANIFEST=data/manifests/documents.json \
   make py-run-retrieval
@@ -212,21 +227,25 @@ curl -X POST http://127.0.0.1:8081/search \
   -d '{"query":"2025年营业收入","top_k":3,"filters":{"company":"688981.SH"}}'
 ```
 
-Compose：
+### 6.4 Compose
 
 ```bash
 docker compose -f deploy/compose.yaml config
 docker compose -f deploy/compose.yaml up --build
 ```
 
-当前会话无法连接 Docker socket；`up` 请在宿主机终端执行。
+Retrieval 容器挂载 `../data:/data:ro`，读取 `/data/private/corpus/pages.jsonl` 与 `/data/manifests/documents.json`。当前会话无法连接 Docker socket；`up` 请在宿主机终端执行。
 
-Retrieval eval：
+### 6.5 评测
 
 ```bash
-make eval
-# Hit@4=1.000 / Recall@4=0.975 / MRR=1.000（Midea 10 题）
+make eval          # Midea 10 题
+make eval-ab       # Midea 四通路 A/B
+make eval-crossdoc # 跨文档 40 题，按 company/split 分组
+make check-all     # Go + Python + contracts + compose config
 ```
+
+Midea baseline：**Hit@4=1.000 / Recall@4=0.975 / MRR=1.000**。跨文档结论与失败分析见 [eval/reports/channels_crossdoc_v1.md](eval/reports/channels_crossdoc_v1.md)。
 
 设计背景与迁移边界见：
 
@@ -237,8 +256,6 @@ make eval
 - [deploy/README.md](deploy/README.md)
 - [workers/retrieval/README.md](workers/retrieval/README.md)
 - [HANDOVER.md](HANDOVER.md)
-
----
 
 ## 7. 文档
 
@@ -252,6 +269,8 @@ make eval
 | [contracts/README.md](contracts/README.md) | 契约 v0、字段约定、校验方式 |
 | [data/README.md](data/README.md) | 语料 manifest 与私有数据约定 |
 | [deploy/README.md](deploy/README.md) | Compose、Dockerfile、端口 |
+| [eval/README.md](eval/README.md) | 评测集、合法答案页标准、四通路结果 |
+| [services/README.md](services/README.md) | Go 服务职责与当前状态 |
 | [docs/migration-from-annual-report.md](docs/migration-from-annual-report.md) | 从旧年报项目迁移哪些资产 |
 
 ---
