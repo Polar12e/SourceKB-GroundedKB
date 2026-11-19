@@ -48,6 +48,8 @@ for _ in $(seq 1 50); do
   sleep 0.2
 done
 
+"$ROOT/bin/model-gateway" >"$ROOT/.tools/model-gateway.log" 2>&1 &
+pids+=("$!")
 "$ROOT/bin/gateway" >"$ROOT/.tools/gateway.log" 2>&1 &
 pids+=("$!")
 for _ in $(seq 1 50); do
@@ -57,6 +59,7 @@ done
 
 echo "retrieval : http://127.0.0.1:8081"
 echo "agent     : http://127.0.0.1:8083"
+echo "model-gw  : http://127.0.0.1:8084"
 echo "gateway   : http://127.0.0.1:8080"
 echo "try: curl -s http://127.0.0.1:8080/search -H 'content-type: application/json' -d '{\"query\":\"营业收入\"}'"
 echo "ctrl-c to stop"

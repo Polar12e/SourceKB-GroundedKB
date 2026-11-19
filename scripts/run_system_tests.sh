@@ -12,6 +12,7 @@ export RETRIEVAL_CORPUS="$ROOT/tests/e2e/fixtures/pages.jsonl"
 export RETRIEVAL_MANIFEST="$ROOT/tests/e2e/fixtures/documents.json"
 export RETRIEVAL_URL="http://127.0.0.1:8081"
 export AGENT_URL="http://127.0.0.1:8083"
+export LLM_ENABLED="${LLM_ENABLED:-false}"
 
 pids=()
 cleanup() {
@@ -34,6 +35,13 @@ done
 pids+=("$!")
 for _ in $(seq 1 60); do
   curl -fsS http://127.0.0.1:8083/healthz >/dev/null 2>&1 && break
+  sleep 0.2
+done
+
+"$ROOT/bin/model-gateway" >"$ROOT/.tools/system-model-gateway.log" 2>&1 &
+pids+=("$!")
+for _ in $(seq 1 60); do
+  curl -fsS http://127.0.0.1:8084/healthz >/dev/null 2>&1 && break
   sleep 0.2
 done
 

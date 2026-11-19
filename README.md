@@ -105,7 +105,7 @@ grounded-kb/
 │  ├─ gateway/                # /healthz + /search + /ask 代理
 │  ├─ ingest/                 # 健康检查骨架
 │  ├─ agent/                  # /ask 抽取式回答
-│  └─ model-gateway/          # 健康检查骨架
+│  └─ model-gateway/          # /v1/chat/completions（DeepSeek 准备）
 ├─ internal/                  # Go 共享包：config/health/httpserver/service/proxy/agent
 ├─ workers/                   # Python worker
 │  ├─ retrieval/              # 四通路：bm25/expanded/dense/hybrid
@@ -145,7 +145,8 @@ grounded-kb/
 - [x] Compose + Dockerfile（`config` 校验通过；未在会话内运行）
 - [x] CI 骨架
 - [x] 88 个 Python 测试 + Go service/proxy/agent 测试
-- [x] 12 条黑盒系统测试：retrieval/agent/gateway + 错误契约
+- [x] 14 条黑盒系统测试：retrieval/agent/gateway/model-gateway + 错误契约
+- [x] LLM 接入准备：DeepSeek `deepseek-chat` 路由、`LLM_ENABLED=false`、抽取式警告
 - [ ] 契约 v0 评审冻结
 - [x] Xiaomi 3 份 OCR：415/127/127 页，已合入 corpus，manifest=ocr
 - [ ] 第一个 ingest pipeline（数据库/索引服务）
@@ -174,7 +175,8 @@ make run-local
 |---|---:|---|
 | gateway | 8080 | `/healthz`、`/search`、`/ask` |
 | retrieval | 8081 | FastAPI `/search` |
-| agent | 8083 | 抽取式 `/ask` |
+| agent | 8083 | 抽取式 `/ask`，带基线警告 |
+| model-gateway | 8084 | DeepSeek `/v1/chat/completions`（默认关闭） |
 
 另开终端验证：
 
@@ -190,7 +192,7 @@ curl -X POST http://127.0.0.1:8080/ask \
   -d '{"question":"2023年营业成本为什么重述？","top_k":3}'
 ```
 
-`/ask` 当前是**确定性抽取式基线**：取 top hit 原文 + citation；无命中返回 `insufficient_evidence`。LLM 生成、引用校验与完整拒答策略仍在后续。
+`/ask` 当前仍是**确定性抽取式基线**，回答会先提示“当前为抽取式基线，尚未接入 LLM 生成”。model-gateway 已准备 DeepSeek `deepseek-chat` 路由，但 `LLM_ENABLED=false`，不会调用外部模型。
 
 默认读取 `data/private/corpus/pages.jsonl`；如果没有 corpus，脚本会警告，`/search` 返回空、`/ask` 拒答。详细数据约定见 [data/README.md](data/README.md)。
 
@@ -204,7 +206,7 @@ make build
 make run-gateway         # :8080
 make run-agent           # :8083
 make run-ingest          # :8082（健康检查骨架）
-make run-model-gateway   # :8084（健康检查骨架）
+make run-model-gateway   # :8084（DeepSeek 路由，默认关闭）
 ```
 
 注意：单独启动 gateway 时，`/search` 需要 retrieval 可达，`/ask` 需要 agent + retrieval 可达；否则返回 502。

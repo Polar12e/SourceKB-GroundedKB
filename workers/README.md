@@ -12,7 +12,7 @@ Python worker：
 retrieval 入口：
 
 - 依赖：`workers/retrieval/requirements.txt`；
-- 测试：`make py-test`（88 项，含 API↔契约、manifest、filters、config、embedding、dense、四通路、eval metrics）；黑盒系统测试：`make test-system`（12 条）。
+- 测试：`make py-test`（88 项，含 API↔契约、manifest、filters、config、embedding、dense、四通路、eval metrics）；黑盒系统测试：`make test-system`（14 条）。
 - 启动：`RETRIEVAL_CORPUS=... make py-run-retrieval`（:8081）；
 - 契约：`contracts/schemas/search-*.schema.json`。
 

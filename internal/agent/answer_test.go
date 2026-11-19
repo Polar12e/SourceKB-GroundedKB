@@ -33,7 +33,7 @@ func TestHandlerReturnsExtractiveAnswer(t *testing.T) {
 	if err := json.Unmarshal(response.Body.Bytes(), &body); err != nil {
 		t.Fatal(err)
 	}
-	if body.Status != "ok" || body.Answer != "营业收入 42" {
+	if body.Status != "ok" || !strings.Contains(body.Answer, "营业收入 42") || !strings.Contains(body.Answer, "抽取式") {
 		t.Fatalf("body = %+v", body)
 	}
 	if len(body.Citations) != 1 || body.Citations[0].Page != 3 {

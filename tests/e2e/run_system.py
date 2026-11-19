@@ -14,7 +14,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_CASES = Path(__file__).parent / "cases.json"
 DEFAULT_REPORT = Path(__file__).parent / "report.md"
-PORTS = {"gateway": 8080, "retrieval": 8081, "agent": 8083}
+PORTS = {"gateway": 8080, "retrieval": 8081, "agent": 8083, "model-gateway": 8084}
 LINE_PREFIX = re.compile(r"^\s*\d+\s*:")
 
 
@@ -98,6 +98,8 @@ def assert_case(case: dict, status: int, payload: dict | None) -> list[str]:
         answer = str(payload.get("answer", ""))
         if expect.get("answer_no_line_prefix") and LINE_PREFIX.search(answer):
             errors.append("answer has line-number prefix")
+        if "answer_contains" in expect and expect["answer_contains"] not in answer:
+            errors.append(f"answer does not contain {expect['answer_contains']!r}")
         citations = payload.get("citations") or []
         if "citations_min" in expect and len(citations) < expect["citations_min"]:
             errors.append(f"citations {len(citations)} < {expect['citations_min']}")

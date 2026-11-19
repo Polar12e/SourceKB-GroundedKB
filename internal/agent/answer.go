@@ -59,6 +59,8 @@ type answer struct {
 	TraceID   string     `json:"trace_id"`
 }
 
+const extractiveWarning = "【当前为抽取式基线，尚未接入 LLM 生成】\n\n"
+
 type errorBody struct {
 	Error struct {
 		Code    string `json:"code"`
@@ -156,7 +158,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	traceID := fmt.Sprintf("trace_%d", time.Now().UnixNano())
 	if len(results.Hits) == 0 {
 		writeJSON(w, http.StatusOK, answer{
-			Answer:    "insufficient evidence",
+			Answer:    extractiveWarning + "insufficient evidence",
 			Status:    "insufficient_evidence",
 			Citations: []citation{},
 			TraceID:   traceID,
@@ -172,7 +174,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	if len(verified) == 0 {
 		writeJSON(w, http.StatusOK, answer{
-			Answer:    "evidence could not be verified",
+			Answer:    extractiveWarning + "evidence could not be verified",
 			Status:    "unverified",
 			Citations: []citation{},
 			TraceID:   traceID,
@@ -200,7 +202,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	writeJSON(w, http.StatusOK, answer{
-		Answer:    quote,
+		Answer:    extractiveWarning + quote,
 		Status:    "ok",
 		Citations: citations,
 		TraceID:   traceID,
