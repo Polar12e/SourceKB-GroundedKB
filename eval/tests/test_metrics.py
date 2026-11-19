@@ -48,3 +48,32 @@ def test_miss() -> None:
     assert metrics.recall_at_k == 0.0
     assert metrics.mrr == 0.0
     assert metrics.rank is None
+
+
+def test_acceptable_evidence_counts_as_hit_but_not_canonical_recall() -> None:
+    case = dict(CASE)
+    case["acceptable_evidence"] = [
+        {"document_id": "doc", "page": 3, "line_start": 1, "line_end": 1}
+    ]
+    case["hard_negatives"] = [
+        {"document_id": "doc", "page": 9, "line_start": 1, "line_end": 1}
+    ]
+
+    metrics = evaluate_case([hit("doc", 3), hit("doc", 9)], case, top_k=4)
+
+    assert metrics.hit_at_k == 1.0
+    assert metrics.recall_at_k == 0.0
+    assert metrics.rank == 1
+    assert metrics.hard_negative_hits == 1
+
+
+def test_hard_negative_does_not_count_as_hit() -> None:
+    case = dict(CASE)
+    case["hard_negatives"] = [
+        {"document_id": "doc", "page": 9, "line_start": 1, "line_end": 1}
+    ]
+
+    metrics = evaluate_case([hit("doc", 9)], case, top_k=4)
+
+    assert metrics.hit_at_k == 0.0
+    assert metrics.hard_negative_hits == 1

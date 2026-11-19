@@ -34,7 +34,9 @@
       "company": "000333.SZ",
       "year": "2024",
       "doc_type": "annual_report"
-    }
+    },
+    "acceptable_evidence": [],
+    "hard_negatives": []
   },
   {
     "case_id": "midea-q02",
@@ -65,7 +67,9 @@
       "company": "000333.SZ",
       "year": "2024",
       "doc_type": "annual_report"
-    }
+    },
+    "acceptable_evidence": [],
+    "hard_negatives": []
   },
   {
     "case_id": "midea-q03",
@@ -84,7 +88,9 @@
       "company": "000333.SZ",
       "year": "2024",
       "doc_type": "annual_report"
-    }
+    },
+    "acceptable_evidence": [],
+    "hard_negatives": []
   },
   {
     "case_id": "midea-q04",
@@ -103,7 +109,9 @@
       "company": "000333.SZ",
       "year": "2024",
       "doc_type": "annual_report"
-    }
+    },
+    "acceptable_evidence": [],
+    "hard_negatives": []
   },
   {
     "case_id": "midea-q05",
@@ -122,7 +130,9 @@
       "company": "000333.SZ",
       "year": "2024",
       "doc_type": "annual_report"
-    }
+    },
+    "acceptable_evidence": [],
+    "hard_negatives": []
   },
   {
     "case_id": "midea-q06",
@@ -141,7 +151,9 @@
       "company": "000333.SZ",
       "year": "2024",
       "doc_type": "annual_report"
-    }
+    },
+    "acceptable_evidence": [],
+    "hard_negatives": []
   },
   {
     "case_id": "midea-q07",
@@ -160,7 +172,9 @@
       "company": "000333.SZ",
       "year": "2024",
       "doc_type": "annual_report"
-    }
+    },
+    "acceptable_evidence": [],
+    "hard_negatives": []
   },
   {
     "case_id": "midea-q08",
@@ -179,7 +193,9 @@
       "company": "000333.SZ",
       "year": "2024",
       "doc_type": "annual_report"
-    }
+    },
+    "acceptable_evidence": [],
+    "hard_negatives": []
   },
   {
     "case_id": "midea-q09",
@@ -204,7 +220,9 @@
       "company": "000333.SZ",
       "year": "2024",
       "doc_type": "annual_report"
-    }
+    },
+    "acceptable_evidence": [],
+    "hard_negatives": []
   },
   {
     "case_id": "midea-q10",
@@ -229,7 +247,9 @@
       "company": "000333.SZ",
       "year": "2024",
       "doc_type": "annual_report"
-    }
+    },
+    "acceptable_evidence": [],
+    "hard_negatives": []
   },
   {
     "case_id": "tencent-2025-01",
@@ -248,7 +268,34 @@
         "line_end": 4
       }
     ],
-    "split": "dev"
+    "split": "dev",
+    "acceptable_evidence": [],
+    "hard_negatives": [
+      {
+        "document_id": "tencent-2025",
+        "page": 281,
+        "line_start": 3,
+        "line_end": 5
+      },
+      {
+        "document_id": "tencent-2025",
+        "page": 75,
+        "line_start": 3,
+        "line_end": 5
+      },
+      {
+        "document_id": "tencent-2025",
+        "page": 77,
+        "line_start": 3,
+        "line_end": 5
+      },
+      {
+        "document_id": "tencent-2025",
+        "page": 121,
+        "line_start": 3,
+        "line_end": 8
+      }
+    ]
   },
   {
     "case_id": "tencent-2025-02",
@@ -267,7 +314,9 @@
         "line_end": 4
       }
     ],
-    "split": "dev"
+    "split": "dev",
+    "acceptable_evidence": [],
+    "hard_negatives": []
   },
   {
     "case_id": "tencent-2025-03",
@@ -286,7 +335,16 @@
         "line_end": 6
       }
     ],
-    "split": "dev"
+    "split": "dev",
+    "acceptable_evidence": [
+      {
+        "document_id": "tencent-2025",
+        "page": 11,
+        "line_start": 18,
+        "line_end": 19
+      }
+    ],
+    "hard_negatives": []
   },
   {
     "case_id": "tencent-2025-04",
@@ -305,7 +363,16 @@
         "line_end": 4
       }
     ],
-    "split": "dev"
+    "split": "dev",
+    "acceptable_evidence": [
+      {
+        "document_id": "tencent-2025",
+        "page": 17,
+        "line_start": 4,
+        "line_end": 4
+      }
+    ],
+    "hard_negatives": []
   },
   {
     "case_id": "tencent-2025-05",
@@ -324,7 +391,16 @@
         "line_end": 18
       }
     ],
-    "split": "dev"
+    "split": "dev",
+    "acceptable_evidence": [
+      {
+        "document_id": "tencent-2025",
+        "page": 214,
+        "line_start": 15,
+        "line_end": 18
+      }
+    ],
+    "hard_negatives": []
   },
   {
     "case_id": "tencent-2025-06",
@@ -343,7 +419,9 @@
         "line_end": 46
       }
     ],
-    "split": "dev"
+    "split": "dev",
+    "acceptable_evidence": [],
+    "hard_negatives": []
   },
   {
     "case_id": "tencent-2025-07",
@@ -362,7 +440,22 @@
         "line_end": 53
       }
     ],
-    "split": "dev"
+    "split": "dev",
+    "acceptable_evidence": [],
+    "hard_negatives": [
+      {
+        "document_id": "tencent-2025",
+        "page": 17,
+        "line_start": 10,
+        "line_end": 11
+      },
+      {
+        "document_id": "tencent-2025",
+        "page": 13,
+        "line_start": 57,
+        "line_end": 57
+      }
+    ]
   },
   {
     "case_id": "tencent-2025-08",
@@ -381,7 +474,28 @@
         "line_end": 59
       }
     ],
-    "split": "dev"
+    "split": "dev",
+    "acceptable_evidence": [],
+    "hard_negatives": [
+      {
+        "document_id": "tencent-2025",
+        "page": 10,
+        "line_start": 4,
+        "line_end": 4
+      },
+      {
+        "document_id": "tencent-2025",
+        "page": 14,
+        "line_start": 4,
+        "line_end": 4
+      },
+      {
+        "document_id": "tencent-2025",
+        "page": 17,
+        "line_start": 13,
+        "line_end": 13
+      }
+    ]
   },
   {
     "case_id": "tencent-2025-09",
@@ -400,7 +514,9 @@
         "line_end": 9
       }
     ],
-    "split": "holdout"
+    "split": "holdout",
+    "acceptable_evidence": [],
+    "hard_negatives": []
   },
   {
     "case_id": "tencent-2025h1-01",
@@ -419,7 +535,16 @@
         "line_end": 4
       }
     ],
-    "split": "dev"
+    "split": "dev",
+    "acceptable_evidence": [
+      {
+        "document_id": "tencent-2025h1",
+        "page": 9,
+        "line_start": 13,
+        "line_end": 14
+      }
+    ],
+    "hard_negatives": []
   },
   {
     "case_id": "tencent-2025h1-02",
@@ -438,7 +563,9 @@
         "line_end": 6
       }
     ],
-    "split": "dev"
+    "split": "dev",
+    "acceptable_evidence": [],
+    "hard_negatives": []
   },
   {
     "case_id": "tencent-2025h1-03",
@@ -457,7 +584,22 @@
         "line_end": 7
       }
     ],
-    "split": "holdout"
+    "split": "holdout",
+    "acceptable_evidence": [
+      {
+        "document_id": "tencent-2025h1",
+        "page": 12,
+        "line_start": 14,
+        "line_end": 15
+      },
+      {
+        "document_id": "tencent-2025h1",
+        "page": 15,
+        "line_start": 11,
+        "line_end": 12
+      }
+    ],
+    "hard_negatives": []
   },
   {
     "case_id": "tencent-2025h1-04",
@@ -476,7 +618,9 @@
         "line_end": 4
       }
     ],
-    "split": "holdout"
+    "split": "holdout",
+    "acceptable_evidence": [],
+    "hard_negatives": []
   },
   {
     "case_id": "tencent-2026h1-01",
@@ -495,7 +639,16 @@
         "line_end": 4
       }
     ],
-    "split": "dev"
+    "split": "dev",
+    "acceptable_evidence": [
+      {
+        "document_id": "tencent-2026h1",
+        "page": 9,
+        "line_start": 13,
+        "line_end": 14
+      }
+    ],
+    "hard_negatives": []
   },
   {
     "case_id": "tencent-2026h1-02",
@@ -514,7 +667,9 @@
         "line_end": 8
       }
     ],
-    "split": "holdout"
+    "split": "holdout",
+    "acceptable_evidence": [],
+    "hard_negatives": []
   },
   {
     "case_id": "smic-2023-01",
@@ -533,7 +688,29 @@
         "line_end": 11
       }
     ],
-    "split": "dev"
+    "split": "dev",
+    "acceptable_evidence": [
+      {
+        "document_id": "smic-2023",
+        "page": 30,
+        "line_start": 10,
+        "line_end": 20
+      }
+    ],
+    "hard_negatives": [
+      {
+        "document_id": "smic-2023",
+        "page": 110,
+        "line_start": 1,
+        "line_end": 5
+      },
+      {
+        "document_id": "smic-2023",
+        "page": 111,
+        "line_start": 1,
+        "line_end": 5
+      }
+    ]
   },
   {
     "case_id": "smic-2023-02",
@@ -552,7 +729,29 @@
         "line_end": 11
       }
     ],
-    "split": "dev"
+    "split": "dev",
+    "acceptable_evidence": [
+      {
+        "document_id": "smic-2023",
+        "page": 30,
+        "line_start": 10,
+        "line_end": 20
+      }
+    ],
+    "hard_negatives": [
+      {
+        "document_id": "smic-2023",
+        "page": 110,
+        "line_start": 1,
+        "line_end": 5
+      },
+      {
+        "document_id": "smic-2023",
+        "page": 111,
+        "line_start": 1,
+        "line_end": 5
+      }
+    ]
   },
   {
     "case_id": "smic-2023-03",
@@ -571,7 +770,22 @@
         "line_end": 12
       }
     ],
-    "split": "dev"
+    "split": "dev",
+    "acceptable_evidence": [],
+    "hard_negatives": [
+      {
+        "document_id": "smic-2023",
+        "page": 110,
+        "line_start": 1,
+        "line_end": 5
+      },
+      {
+        "document_id": "smic-2023",
+        "page": 111,
+        "line_start": 1,
+        "line_end": 5
+      }
+    ]
   },
   {
     "case_id": "smic-2023-04",
@@ -590,7 +804,22 @@
         "line_end": 12
       }
     ],
-    "split": "holdout"
+    "split": "holdout",
+    "acceptable_evidence": [],
+    "hard_negatives": [
+      {
+        "document_id": "smic-2023",
+        "page": 109,
+        "line_start": 1,
+        "line_end": 5
+      },
+      {
+        "document_id": "smic-2023",
+        "page": 137,
+        "line_start": 1,
+        "line_end": 5
+      }
+    ]
   },
   {
     "case_id": "smic-2023-05",
@@ -609,7 +838,9 @@
         "line_end": 13
       }
     ],
-    "split": "holdout"
+    "split": "holdout",
+    "acceptable_evidence": [],
+    "hard_negatives": []
   },
   {
     "case_id": "smic-2024-01",
@@ -628,7 +859,16 @@
         "line_end": 8
       }
     ],
-    "split": "dev"
+    "split": "dev",
+    "acceptable_evidence": [
+      {
+        "document_id": "smic-2024",
+        "page": 29,
+        "line_start": 5,
+        "line_end": 20
+      }
+    ],
+    "hard_negatives": []
   },
   {
     "case_id": "smic-2024-02",
@@ -647,7 +887,16 @@
         "line_end": 8
       }
     ],
-    "split": "dev"
+    "split": "dev",
+    "acceptable_evidence": [
+      {
+        "document_id": "smic-2024",
+        "page": 29,
+        "line_start": 5,
+        "line_end": 20
+      }
+    ],
+    "hard_negatives": []
   },
   {
     "case_id": "smic-2024-03",
@@ -666,7 +915,29 @@
         "line_end": 9
       }
     ],
-    "split": "dev"
+    "split": "dev",
+    "acceptable_evidence": [
+      {
+        "document_id": "smic-2024",
+        "page": 29,
+        "line_start": 5,
+        "line_end": 20
+      }
+    ],
+    "hard_negatives": [
+      {
+        "document_id": "smic-2024",
+        "page": 102,
+        "line_start": 1,
+        "line_end": 5
+      },
+      {
+        "document_id": "smic-2024",
+        "page": 103,
+        "line_start": 1,
+        "line_end": 5
+      }
+    ]
   },
   {
     "case_id": "smic-2024-04",
@@ -685,7 +956,9 @@
         "line_end": 9
       }
     ],
-    "split": "holdout"
+    "split": "holdout",
+    "acceptable_evidence": [],
+    "hard_negatives": []
   },
   {
     "case_id": "smic-2024-05",
@@ -704,7 +977,9 @@
         "line_end": 9
       }
     ],
-    "split": "holdout"
+    "split": "holdout",
+    "acceptable_evidence": [],
+    "hard_negatives": []
   },
   {
     "case_id": "smic-2025-01",
@@ -723,7 +998,28 @@
         "line_end": 9
       }
     ],
-    "split": "dev"
+    "split": "dev",
+    "acceptable_evidence": [
+      {
+        "document_id": "smic-2025",
+        "page": 127,
+        "line_start": 15,
+        "line_end": 18
+      },
+      {
+        "document_id": "smic-2025",
+        "page": 190,
+        "line_start": 9,
+        "line_end": 9
+      },
+      {
+        "document_id": "smic-2025",
+        "page": 26,
+        "line_start": 9,
+        "line_end": 20
+      }
+    ],
+    "hard_negatives": []
   },
   {
     "case_id": "smic-2025-02",
@@ -742,7 +1038,9 @@
         "line_end": 9
       }
     ],
-    "split": "dev"
+    "split": "dev",
+    "acceptable_evidence": [],
+    "hard_negatives": []
   },
   {
     "case_id": "smic-2025-03",
@@ -761,7 +1059,23 @@
         "line_end": 11
       }
     ],
-    "split": "holdout"
+    "split": "holdout",
+    "acceptable_evidence": [
+      {
+        "document_id": "smic-2025",
+        "page": 26,
+        "line_start": 9,
+        "line_end": 20
+      }
+    ],
+    "hard_negatives": [
+      {
+        "document_id": "smic-2025",
+        "page": 190,
+        "line_start": 9,
+        "line_end": 9
+      }
+    ]
   },
   {
     "case_id": "smic-2025-04",
@@ -780,7 +1094,16 @@
         "line_end": 17
       }
     ],
-    "split": "holdout"
+    "split": "holdout",
+    "acceptable_evidence": [
+      {
+        "document_id": "smic-2025",
+        "page": 17,
+        "line_start": 41,
+        "line_end": 59
+      }
+    ],
+    "hard_negatives": []
   },
   {
     "case_id": "smic-2025-05",
@@ -799,6 +1122,15 @@
         "line_end": 17
       }
     ],
-    "split": "holdout"
+    "split": "holdout",
+    "acceptable_evidence": [
+      {
+        "document_id": "smic-2025",
+        "page": 17,
+        "line_start": 59,
+        "line_end": 59
+      }
+    ],
+    "hard_negatives": []
   }
 ]

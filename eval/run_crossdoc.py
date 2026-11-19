@@ -31,6 +31,7 @@ def summarize(metrics: list) -> dict:
         "recall_at_k": sum(item.recall_at_k for item in metrics) / total,
         "mrr": sum(item.mrr for item in metrics) / total,
         "precision_at_k": sum(item.precision_at_k for item in metrics) / total,
+        "hard_negative_hits": sum(item.hard_negative_hits for item in metrics),
     }
 
 
@@ -68,6 +69,7 @@ def channel_overall(rows: list) -> dict:
         "recall_at_k": sum(group["recall_at_k"] * group["n"] for group in company_groups) / total,
         "mrr": sum(group["mrr"] * group["n"] for group in company_groups) / total,
         "precision_at_k": sum(group["precision_at_k"] * group["n"] for group in company_groups) / total,
+        "hard_negative_hits": sum(group["hard_negative_hits"] for group in company_groups),
     }
 
 
@@ -104,15 +106,15 @@ def main(argv: list[str] | None = None) -> int:
         "",
         "## Overall",
         "",
-        f"| channel | build s | Hit@{args.top_k} | Recall@{args.top_k} | MRR | precision@{args.top_k} | filters |",
-        "|---|---:|---:|---:|---:|---:|---|",
+        f"| channel | build s | Hit@{args.top_k} | Recall@{args.top_k} | MRR | precision@{args.top_k} | hard_neg | filters |",
+        "|---|---:|---:|---:|---:|---:|---:|---|",
     ]
     for row in rows:
         item = row["overall"]
         lines.append(
             f"| {row['channel']} | {row['build_seconds']:.2f} | {item['hit_at_k']:.3f} | "
             f"{item['recall_at_k']:.3f} | {item['mrr']:.3f} | {item['precision_at_k']:.3f} | "
-            f"{'OK' if row['filter_ok'] else 'FAIL'} |"
+            f"{item['hard_negative_hits']} | {'OK' if row['filter_ok'] else 'FAIL'} |"
         )
 
     for title, prefix, keys in (

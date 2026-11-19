@@ -31,6 +31,8 @@ class CaseMetrics:
     rank: int | None
     top_keys: list[tuple[str, int]]
     gold_keys: list[tuple[str, int]]
+    acceptable_keys: list[tuple[str, int]]
+    hard_negative_hits: int
 
 
 def gold_keys(case: dict) -> list[tuple[str, int]]:
@@ -38,23 +40,33 @@ def gold_keys(case: dict) -> list[tuple[str, int]]:
 
 
 def evaluate_case(hits: list[SearchHit], case: dict, top_k: int) -> CaseMetrics:
-    gold = gold_keys(case)
-    gold_set = set(gold)
+    canonical = set(gold_keys(case))
+    acceptable = canonical | {
+        (item["document_id"], int(item["page"]))
+        for item in case.get("acceptable_evidence", [])
+    }
+    hard_negatives = {
+        (item["document_id"], int(item["page"]))
+        for item in case.get("hard_negatives", [])
+    }
     ranked = hits[:top_k]
     keys = [(hit.document_id, hit.page) for hit in ranked]
     rank = next(
-        (position for position, key in enumerate(keys, start=1) if key in gold_set),
+        (position for position, key in enumerate(keys, start=1) if key in acceptable),
         None,
     )
-    found = len(gold_set & set(keys))
+    canonical_found = len(canonical & set(keys))
+    acceptable_found = len(acceptable & set(keys))
     return CaseMetrics(
         hit_at_k=1.0 if rank else 0.0,
-        recall_at_k=found / len(gold_set) if gold_set else 0.0,
+        recall_at_k=canonical_found / len(canonical) if canonical else 0.0,
         mrr=1.0 / rank if rank else 0.0,
-        precision_at_k=found / len(keys) if keys else 0.0,
+        precision_at_k=acceptable_found / len(keys) if keys else 0.0,
         rank=rank,
         top_keys=keys,
-        gold_keys=gold,
+        gold_keys=sorted(canonical),
+        acceptable_keys=sorted(acceptable),
+        hard_negative_hits=len(hard_negatives & set(keys)),
     )
 
 
@@ -178,6 +190,8 @@ def main(argv: list[str] | None = None) -> int:
                 "precision_at_k": metric.precision_at_k,
                 "top_keys": metric.top_keys,
                 "gold_keys": metric.gold_keys,
+                "acceptable_keys": metric.acceptable_keys,
+                "hard_negative_hits": metric.hard_negative_hits,
             }
             for case, metric in zip(cases, results, strict=True)
         ],
