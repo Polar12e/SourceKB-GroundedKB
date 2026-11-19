@@ -19,7 +19,7 @@ DOCUMENTS = {
 
 
 class ConceptEmbedder:
-    name = "fake-concepts"
+    name = "fake-terms"
     dim = 2
 
     def encode(self, texts):

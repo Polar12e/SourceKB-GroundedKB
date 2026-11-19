@@ -4,9 +4,8 @@ Ported from the legacy ``src/retrieval.py`` "builtin" expansion and statement
 prior. It stays outside the generic BM25 index so other domains can plug in
 their own vocabulary without copying accounting rules.
 
-This profile intentionally covers the *builtin* ratio/restatement expansions
-used by the legacy ``bm25`` baseline. The broader colloquial lexicon
-(``src/lexicon.py``) is a separate migration for ``domains/finance``.
+The finance term table lives in ``terms.json`` and is converted by
+``lexicon.py``; this profile only decides when and how strongly to apply it.
 """
 
 from __future__ import annotations
@@ -43,9 +42,9 @@ class FinanceRetrievalProfile:
     """Query expansion and statement-page prior for annual reports.
 
     ``builtin`` keeps the ratio/restatement expansion used by the legacy
-    ``bm25`` baseline. ``lexicon`` adds the full colloquial concept table;
+    ``bm25`` baseline. ``lexicon`` adds the finance term table;
     ``auto`` only adds it when query coverage is below
-    ``OOV_EXPANSION_THRESHOLD``. Lexicon terms are down-weighted.
+    ``OOV_EXPANSION_THRESHOLD``. Term-table additions are down-weighted.
     """
 
     def __init__(self, mode: str = "builtin") -> None:

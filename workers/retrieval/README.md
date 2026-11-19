@@ -8,7 +8,7 @@ Python retrieval worker，负责 BM25 / hit window / RRF / filters。T1.2 已从
 - **Metadata filters**：`company` / `year` / `doc_type` / `document_id`，未知字段返回 400；
 - **Hit window**：从 chunk 的 page/line locator 向上下扩展 2 行，跨 chunk 边界；
 - **RRF**：`fusion.py` 提供加权 reciprocal-rank fusion；`dense.py` 提供 DenseIndex，可与 BM25 组合（API 当前仍默认 BM25 单通道）；
-- **Finance profile**：`domains/finance/retrieval.py` 保留旧 `bm25` 的 ratio/restatement 扩展和报表页 +18 加分；`lexicon.py` 提供完整口语概念表，`RETRIEVAL_EXPANSION=none|builtin|lexicon|auto` 可切换；
+- **Finance profile**：`domains/finance/retrieval.py` 保留旧 `bm25` 的 ratio/restatement 扩展和报表页 +18 加分；`domains/finance/terms.json` 是财务名词配置，`lexicon.py` 负责转换，`RETRIEVAL_EXPANSION=none|builtin|lexicon|auto` 可切换；
 - **Embedding**：`workers/embedding/` 提供 LSA 与 OpenAI 兼容 provider；离线 LSA 实测弱于 BM25，默认不启用 dense。
 
 ## API
@@ -42,8 +42,11 @@ curl -X POST http://127.0.0.1:8081/search \
 
 `RETRIEVAL_CORPUS` 为 JSONL，每行：`{"document_id": "...", "page": 1, "text": "..."}`；`document_id` 可省略（默认 `legacy`）。`RETRIEVAL_MANIFEST` 默认 `data/manifests/documents.json`，用于 metadata filters。
 
+## 名词表转换
+
+财务名词配置在 `domains/finance/terms.json`。查询先做简繁/数字/空白归一，再按中文 bigram 与名词表各组匹配；命中的同组名词以 0.45 权重加入，原 query 词保持 1.0。`auto` 模式只在 query coverage < 0.5 时启用。完整步骤见 [domains/finance/README.md](../../domains/finance/README.md)。
+
 ## 边界
 
-- dense / embedding 通道尚未迁移；`HybridIndex` 已就绪，等 `workers/embedding` 接入。
-- 旧项目的完整口语词表（`src/lexicon.py`）尚未迁移，当前只保留 builtin 财务扩展。
+- dense / embedding 已迁移（`workers/embedding/`、`dense.py`），但默认关闭；旧 LSA 实测弱于 BM25，等真实 embedding 模型再切换。
 - 旧 corpus 不提交到仓库；只使用合成 fixture 和外部路径做 baseline。

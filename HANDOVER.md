@@ -23,7 +23,7 @@
 - Go 服务骨架（gateway / ingest / agent / model-gateway + `/healthz`）；
 - Python retrieval：BM25 + hit window + RRF + finance profile（`/search` 可用）；
 - Retrieval 增强：metadata filters（company/year/doc_type/document_id）+ 简繁归一；
-- RAG 资产：完整 finance lexicon + embedding provider + dense channel + RAG notes；
+- RAG 资产：财务名词表（terms.json + lexicon.py）+ embedding provider + dense channel + RAG notes；
 - 10 文档本地语料：PDF parser + manifest + 页级 JSONL（美的/腾讯/中芯国际/小米）；
 - 10 题 retrieval eval：Hit@4=1.000 / Recall@4=0.975 / MRR=1.000，与旧 `bm25` 一致；
 - 契约 v0 草案（13 个 JSON Schema + OpenAPI）；

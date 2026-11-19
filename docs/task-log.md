@@ -278,7 +278,7 @@
 
 **新增**
 
-- `domains/finance/lexicon.py`：完整 CONCEPT_GROUPS / `expand_terms`（0.45 权重）。
+- `domains/finance/terms.json`：财务名词配置（同组同义/近义，权重 0.45）；`lexicon.py` 负责加载与转换。
 - `FinanceRetrievalProfile` 支持 `none|builtin|lexicon|auto`；`auto` 仅在 coverage < 0.5 时扩展。
 - `workers/embedding/`：LSAEmbedder、OpenAICompatibleEmbedder、EmbeddingCache、embed_documents。
 - `workers/retrieval/dense.py`：DenseIndex，支持 metadata filters 与 hit window。

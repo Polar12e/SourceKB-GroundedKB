@@ -1,40 +1,70 @@
-"""Domain vocabulary used to rewrite finance questions into report wording.
+"""Finance term table and query-term conversion.
 
-Ported from the legacy ``src/lexicon.py``. Matching is on character bigrams,
-not substrings, and rewrite terms are added below full weight.
+The table is a **finance term configuration** (``terms.json``). A group lists
+terms that are considered equivalent or near-equivalent for query expansion; no
+group replaces the user's original wording.
+
+Conversion logic
+----------------
+
+1. Normalize the query: lowercase, traditional -> simplified (``zhconv``),
+   remove thousands separators, join split CJK labels.
+2. Build the query's CJK character bigrams (plus ASCII/number tokens for the
+   retrieval index). Matching uses bigram overlap, not substring matching, so
+   ``技术上要投多少钱`` still matches the term ``技术投入`` through ``技术``.
+3. For every term group, if any group member shares a bigram with the query,
+   all sibling terms that are not literally present in the query become
+   expansion candidates.
+4. Deduplicate candidates while preserving group order.
+5. Convert each candidate term to its retrieval tokens and attach
+   ``EXPANSION_WEIGHT`` (0.45). The original query terms keep weight 1.0, so an
+   expansion can add recall but cannot outvote the user's own words.
+6. The retrieval profile decides *when* to apply the expansion:
+   ``builtin`` = ratio/restatement terms only, ``lexicon`` = always add the
+   term table, ``auto`` = only when corpus coverage is below 0.5, ``none`` =
+   never.
+
+The table is intentionally a flat configuration rather than hard-coded Python;
+it can be reviewed and changed without touching retrieval logic.
 """
 
 from __future__ import annotations
 
+import json
 import re
+from pathlib import Path
 
-CONCEPT_GROUPS: tuple[tuple[str, ...], ...] = (
-    ("存货", "库存", "库存商品", "仓库", "备货", "积压", "压货", "卖不掉"),
-    ("应收账款", "赊账", "赊销", "欠款", "回款", "坏账"),
-    ("应付职工薪酬", "职工薪酬", "工资", "薪酬", "人工成本", "员工薪酬", "发工资"),
-    ("现金分红", "分红", "派息", "股利", "利润分配", "送红股"),
-    ("研发投入", "研发费用", "研发支出", "技术投入", "科研投入", "技术"),
-    ("利息支出", "利息费用", "财务费用", "融资成本"),
-    ("短期借款", "银行借款", "有息负债", "借款", "贷款"),
-    ("质押", "抵押", "股份质押", "冻结"),
-    ("商誉", "并购溢价", "收购溢价"),
-    ("存货跌价准备", "跌价准备", "减值准备", "存货减值"),
-    ("毛利率", "毛利", "赚钱能力", "盈利能力"),
-    ("资产负债率", "偿债能力", "还债能力", "杠杆"),
-    ("经营活动现金流量净额", "经营现金流", "造血能力"),
-    ("汇率波动", "汇兑损益", "外汇风险", "升值", "贬值"),
-    ("营业收入", "营收", "收入", "销售额"),
-)
+from core.text import normalize
 
-# Rewrites are additive: two rewritten terms must not outweigh the user's own
-# keyword.
-EXPANSION_WEIGHT = 0.45
+_TERMS_PATH = Path(__file__).with_name("terms.json")
 _CJK_RUN = re.compile(r"[\u4e00-\u9fff]+")
+
+
+def _load_terms() -> tuple[tuple[tuple[str, ...], ...], float]:
+    config = json.loads(_TERMS_PATH.read_text(encoding="utf-8"))
+    groups = tuple(
+        tuple(str(term) for term in group)
+        for group in config["groups"]
+    )
+    if not groups:
+        raise ValueError(f"{_TERMS_PATH}: groups must not be empty")
+    for group in groups:
+        if len(group) < 2:
+            raise ValueError(f"{_TERMS_PATH}: each group needs at least two terms")
+        if any(len(term) < 2 for term in group):
+            raise ValueError(f"{_TERMS_PATH}: single-character term is too broad")
+    weight = float(config["expansion_weight"])
+    if not 0 < weight < 1:
+        raise ValueError(f"{_TERMS_PATH}: expansion_weight must be between 0 and 1")
+    return groups, weight
+
+
+TERM_GROUPS, EXPANSION_WEIGHT = _load_terms()
 
 
 def _bigrams(text: str) -> set[str]:
     pairs: set[str] = set()
-    for run in _CJK_RUN.findall(text):
+    for run in _CJK_RUN.findall(normalize(text)):
         if len(run) == 1:
             pairs.add(run)
         else:
@@ -42,21 +72,27 @@ def _bigrams(text: str) -> set[str]:
     return pairs
 
 
-def concepts_for(text: str) -> tuple[str, ...]:
-    """Return sibling terms of concepts whose wording overlaps ``text``."""
+def terms_for(text: str) -> tuple[str, ...]:
+    """Return matching name-table siblings that are absent from ``text``."""
 
-    query_pairs = _bigrams(text)
+    normalized = normalize(text)
+    query_pairs = _bigrams(normalized)
     matched: list[str] = []
-    for group in CONCEPT_GROUPS:
+    for group in TERM_GROUPS:
         if any(query_pairs & _bigrams(member) for member in group):
-            matched.extend(member for member in group if member not in text)
+            matched.extend(member for member in group if member not in normalized)
     return tuple(dict.fromkeys(matched))
 
 
 def expand_terms(query: str) -> list[tuple[str, float]]:
-    """Return ``(term, weight)`` rewrites for concepts mentioned in ``query``."""
+    """Return ``(term, weight)`` expansions for the configured name table."""
 
-    return [(term, EXPANSION_WEIGHT) for term in concepts_for(query)]
+    return [(term, EXPANSION_WEIGHT) for term in terms_for(query)]
 
 
-__all__ = ["CONCEPT_GROUPS", "EXPANSION_WEIGHT", "concepts_for", "expand_terms"]
+__all__ = [
+    "EXPANSION_WEIGHT",
+    "TERM_GROUPS",
+    "expand_terms",
+    "terms_for",
+]
