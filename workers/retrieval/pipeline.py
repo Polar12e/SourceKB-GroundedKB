@@ -2,9 +2,15 @@
 
 from __future__ import annotations
 
+import os
 from collections.abc import Mapping
 
-from workers.embedding.embedding import EmbeddingCache, LsaEmbedder
+from workers.embedding.embedding import (
+    EmbeddingCache,
+    Embedder,
+    LsaEmbedder,
+    OpenAICompatibleEmbedder,
+)
 
 from .chunking import Page
 from .config import load_config
@@ -15,6 +21,38 @@ from .index import BM25Index
 from .profile import profile_from_config
 
 CHANNELS = ("bm25", "expanded", "dense", "hybrid")
+
+
+def create_embedder(settings: Mapping) -> Embedder:
+    """Dispatch dense provider settings to an Embedder instance.
+
+    LSA is offline and default. OpenAI-compatible endpoints require an explicit
+    base_url/model/dim and read the API key from an environment variable; keys
+    never appear in the YAML config.
+    """
+
+    provider = str(settings.get("provider") or "lsa").lower()
+    if provider == "lsa":
+        return LsaEmbedder(dim=int(settings.get("dim") or 192))
+
+    if provider == "openai":
+        api_key_env = str(settings.get("api_key_env") or "OPENAI_API_KEY")
+        api_key = os.getenv(api_key_env)
+        if not api_key:
+            raise ValueError(
+                f"missing embedding API key: set {api_key_env} in the environment"
+            )
+        return OpenAICompatibleEmbedder(
+            model=str(settings["model"]),
+            base_url=str(settings["base_url"]),
+            api_key=api_key,
+            dim=int(settings["dim"]),
+            batch_size=int(settings.get("batch_size") or 64),
+            timeout=float(settings.get("timeout") or 30.0),
+            retries=int(settings.get("retries") if settings.get("retries") is not None else 2),
+        )
+
+    raise ValueError(f"unsupported dense provider: {provider}")
 
 
 def build_channel(
@@ -60,10 +98,7 @@ def build_channel(
         return BM25Index.from_pages(pages, profile=profile, **common)
 
     if name == "dense":
-        provider = settings.get("provider", "lsa")
-        if provider != "lsa":
-            raise ValueError(f"unsupported dense provider: {provider}")
-        embedder = LsaEmbedder(dim=int(settings.get("dim", 192)))
+        embedder = create_embedder(settings)
         return DenseIndex.from_pages(
             pages,
             embedder,

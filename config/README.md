@@ -20,6 +20,8 @@
 | | `statement_bonus` | 报表页加分 |
 | `channels.<name>` | `profile` | expanded 使用的 profile |
 | | `provider`, `dim` | dense 的 provider/维度 |
+| | `model`, `base_url`, `api_key_env` | openai provider 的模型/端点/密钥环境变量 |
+| | `batch_size`, `timeout`, `retries` | openai 调用参数 |
 | | `channels` | hybrid 的子通道及权重 |
 
 ## 切换
@@ -43,6 +45,13 @@ BM25 / expanded / dense / hybrid 四种通道的构建逻辑完全通用；`prof
 - 未知顶层字段拒绝。
 
 配置错误在启动阶段失败，不会静默回退。
+
+## Dense provider
+
+- `lsa`：离线默认，只需要 `dim`；
+- `openai`：需要 `model`、`base_url`、`dim`，API key 从 `api_key_env` 指定的环境变量读取，**不写入 YAML**；
+- `base_url` 只允许 http/https，且不允许带用户名/密码；
+- 缓存 identity 包含 endpoint/model 或 LSA 超参，避免不同 provider 复用错向量。
 
 ## 当前评估
 

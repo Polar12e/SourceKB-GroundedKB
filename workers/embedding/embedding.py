@@ -105,6 +105,12 @@ class LsaEmbedder:
     def fitted(self) -> bool:
         return self.basis is not None
 
+    @property
+    def cache_identity(self) -> str:
+        """Cache key component for LSA hyperparameters, not just dimension."""
+
+        return f"lsa:{self.dim}:{self.min_df}:{self.max_df_ratio}:{self.seed}"
+
     def fit(self, token_lists: Sequence[Sequence[str]]) -> "LsaEmbedder":
         if not token_lists:
             raise EmbeddingError("cannot fit LSA on an empty corpus")
@@ -203,6 +209,13 @@ class OpenAICompatibleEmbedder:
         self.name = f"api:{self.model}"
         if self.batch_size < 1:
             raise ValueError("batch_size must be positive")
+
+    @property
+    def cache_identity(self) -> str:
+        """Include the endpoint; two gateways can serve different vectors."""
+
+        endpoint = hashlib.sha256(self.base_url.rstrip("/").encode("utf-8")).hexdigest()[:10]
+        return f"api:{self.model}@{endpoint}"
 
     def encode(self, texts: Sequence[str]) -> np.ndarray:
         if not texts:
@@ -313,7 +326,8 @@ def embed_documents(texts: Sequence[str], embedder: Embedder, *,
         embedder.fit(fit_on)
     assert embedder.dim > 0
     store = cache or EmbeddingCache()
-    key = store.key(embedder.name, corpus_fingerprint(texts), len(texts), embedder.dim)
+    identity = getattr(embedder, "cache_identity", embedder.name)
+    key = store.key(identity, corpus_fingerprint(texts), len(texts), embedder.dim)
     cached = store.load(key, len(texts), embedder.dim)
     if cached is not None:
         return cached

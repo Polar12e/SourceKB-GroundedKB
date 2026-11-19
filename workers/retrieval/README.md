@@ -9,7 +9,7 @@ Python retrieval worker，负责四通路检索（`bm25` / `expanded` / `dense` 
 - **Hit window**：从 chunk 的 page/line locator 向上下扩展 2 行，跨 chunk 边界；
 - **四通路**：`pipeline.py` 从 `config/retrieval.yaml` 构建 `bm25`、`expanded`、`dense`、`hybrid`；`hybrid` 用加权 RRF；
 - **Profile**：`profile.py` 读取 `profiles.finance`（模式、内置扩展、报表页加分）；名词表由 `domains/finance/terms.json` 提供；
-- **Embedding**：`workers/embedding/` 提供 LSA 与 OpenAI 兼容 provider；离线 LSA 实测弱于 BM25，默认不启用 dense。
+- **Embedding**：`workers/embedding/` 提供 LSA 与 OpenAI 兼容 provider；`pipeline.create_embedder` 按 `dense.provider: lsa|openai` 分发，openai 需要 `model/base_url/dim` 与 `api_key_env` 指定的环境变量。离线 LSA 实测弱于 BM25，默认不启用 dense。
 
 ## API
 

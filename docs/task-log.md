@@ -370,6 +370,26 @@
 - 题目仍需人工复核；SMIC A 股仅 5 题。
 - profile 分片、hybrid 权重调参；Xiaomi OCR；DB ingest。
 
+### 2026-11-19 16:21 · Dense provider 分发与 OpenAI 配置
+
+**实现**
+
+- `workers/retrieval/pipeline.py::create_embedder`：按 `provider: lsa|openai` 分发，不再硬编码 LsaEmbedder。
+- `ChannelSettings` 增加 `model/base_url/api_key_env/batch_size/timeout/retries`；Provider 条件校验。
+- `openai` 必须提供 `model`、`base_url`、`dim`；`base_url` 仅 http/https 且禁止凭据；key 从环境变量读取。
+- `LsaEmbedder.cache_identity` 包含 dim/min_df/max_df/seed；`OpenAICompatibleEmbedder.cache_identity` 包含 model + base_url 指纹，避免缓存串味。
+- 配置示例保留 `lsa` 默认，openai 以注释示例提供；未调用真实 API。
+
+**验证**
+
+- 82 个 Python 测试通过（新增 provider/config/cache identity 测试）。
+- 默认 LSA 下 Midea/跨文档指标不变；未切换默认通道。
+
+**未做**
+
+- 未用真实 OpenAI endpoint 建索引/评测；等 key 与预算确认后再做。
+- model 实际维度只能在首次 encode 时校验（配置 dim 配错会明确报错）。
+
 ---
 
 ## 2. 工作区清单（已读）
@@ -457,6 +477,7 @@
 | T1.10 | 四通路通用化：bm25/expanded/dense/hybrid + 配置驱动 | `DONE` | `config/retrieval.yaml` + Pydantic 校验；A/B：expanded 1.000/0.975/1.000 最优 |
 | T1.11 | 四通路 A/B 评估报告（Midea） | `DONE` | `eval/reports/channels_midea_v1.md`；默认保持 expanded |
 | T1.12 | 跨文档 40 题 A/B 评估 | `DONE` | `finance_crossdoc_v1.json`；hybrid 总体最高但腾讯回退，未改默认 |
+| T1.13 | Dense provider 分发 + OpenAI 配置校验 | `DONE` | `create_embedder`；channels 配置；缓存 identity；82 tests |
 
 ### M2：Agent + 引用
 

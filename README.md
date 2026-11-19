@@ -131,7 +131,7 @@ grounded-kb/
 - [x] Go 服务骨架：gateway / ingest / agent / model-gateway + `/healthz`
 - [x] Python retrieval：BM25 + hit window + RRF + finance profile
 - [x] Retrieval 增强：metadata filters（company/year/doc_type/document_id）+ 简繁归一
-- [x] RAG 资产：财务名词表（terms.json）/ embedding provider / dense channel + RAG notes
+- [x] RAG 资产：财务名词表（terms.json）/ embedding provider（lsa/openai）/ dense channel + RAG notes
 - [x] 四通路通用化：bm25 / expanded / dense / hybrid 由 config/retrieval.yaml 驱动
 - [x] 跨文档 40 题 A/B：hybrid 最高但腾讯回退，默认保持 expanded
 - [x] 10 文档本地语料：PDF parser + manifest + 页级 JSONL

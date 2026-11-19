@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 import os
+import re
 from pathlib import Path
 from typing import Literal
+from urllib.parse import urlparse
 
 import yaml
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
@@ -80,9 +82,44 @@ class ChannelSettings(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     profile: str | None = None
-    provider: str | None = None
-    dim: int | None = None
+    provider: Literal["lsa", "openai"] | None = None
+    dim: int | None = Field(default=None, gt=0)
+    model: str | None = None
+    base_url: str | None = None
+    api_key_env: str | None = "OPENAI_API_KEY"
+    batch_size: int | None = Field(default=None, gt=0)
+    timeout: float | None = Field(default=None, gt=0)
+    retries: int | None = Field(default=None, ge=0)
     channels: dict[str, float] | None = None
+
+    @field_validator("model")
+    @classmethod
+    def _model(cls, value: str | None) -> str | None:
+        if value is not None and not value.strip():
+            raise ValueError("model must not be empty")
+        return value
+
+    @field_validator("base_url")
+    @classmethod
+    def _base_url(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        parsed = urlparse(value)
+        if (
+            parsed.scheme not in {"http", "https"}
+            or not parsed.netloc
+            or parsed.username
+            or parsed.password
+        ):
+            raise ValueError("base_url must be an http(s) URL without credentials")
+        return value.rstrip("/")
+
+    @field_validator("api_key_env")
+    @classmethod
+    def _api_key_env(cls, value: str | None) -> str | None:
+        if value is not None and not re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*", value):
+            raise ValueError("api_key_env must be an environment variable name")
+        return value
 
 
 class RetrievalConfig(BaseModel):
@@ -111,10 +148,20 @@ class RetrievalConfig(BaseModel):
 
         dense = self.channels.get("dense")
         if dense is not None:
-            if dense.provider and dense.provider != "lsa":
-                raise ValueError("dense.provider must be 'lsa'")
-            if dense.dim is not None and dense.dim < 1:
-                raise ValueError("dense.dim must be positive")
+            provider = dense.provider or "lsa"
+            if provider == "openai":
+                missing = [
+                    name
+                    for name in ("model", "base_url", "dim")
+                    if getattr(dense, name) is None
+                ]
+                if missing:
+                    raise ValueError(
+                        f"dense provider openai requires: {', '.join(missing)}"
+                    )
+            elif provider == "lsa":
+                if dense.model or dense.base_url:
+                    raise ValueError("model/base_url are only valid for dense provider openai")
 
         hybrid = self.channels.get("hybrid")
         if hybrid is not None:

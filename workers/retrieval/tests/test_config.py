@@ -55,3 +55,66 @@ def test_unknown_top_level_key_is_rejected(tmp_path) -> None:
     payload["unknown_parameter"] = 1
     with pytest.raises(ValueError, match="invalid retrieval config"):
         load_config(write_config(tmp_path, payload))
+
+
+def test_openai_provider_accepts_required_fields(tmp_path) -> None:
+    payload = raw_config()
+    payload["channels"]["dense"].update(
+        {
+            "provider": "openai",
+            "model": "text-embedding-3-small",
+            "base_url": "https://api.example.com/v1/",
+            "dim": 1536,
+            "api_key_env": "EMBED_API_KEY",
+        }
+    )
+    config = load_config(write_config(tmp_path, payload))
+    dense = config["channels"]["dense"]
+    assert dense["provider"] == "openai"
+    assert dense["base_url"] == "https://api.example.com/v1"
+    assert dense["dim"] == 1536
+
+
+def test_openai_provider_requires_base_url(tmp_path) -> None:
+    payload = raw_config()
+    payload["channels"]["dense"].update(
+        {"provider": "openai", "model": "m", "dim": 3}
+    )
+    with pytest.raises(ValueError, match="requires: base_url"):
+        load_config(write_config(tmp_path, payload))
+
+
+def test_openai_base_url_rejects_credentials(tmp_path) -> None:
+    payload = raw_config()
+    payload["channels"]["dense"].update(
+        {
+            "provider": "openai",
+            "model": "m",
+            "base_url": "https://user:secret@example.com/v1",
+            "dim": 3,
+        }
+    )
+    with pytest.raises(ValueError, match="without credentials"):
+        load_config(write_config(tmp_path, payload))
+
+
+def test_openai_api_key_env_must_be_a_name(tmp_path) -> None:
+    payload = raw_config()
+    payload["channels"]["dense"].update(
+        {
+            "provider": "openai",
+            "model": "m",
+            "base_url": "https://example.com/v1",
+            "dim": 3,
+            "api_key_env": "not a var name",
+        }
+    )
+    with pytest.raises(ValueError, match="api_key_env"):
+        load_config(write_config(tmp_path, payload))
+
+
+def test_lsa_rejects_openai_only_fields(tmp_path) -> None:
+    payload = raw_config()
+    payload["channels"]["dense"]["model"] = "should-not-be-used"
+    with pytest.raises(ValueError, match="only valid for dense provider openai"):
+        load_config(write_config(tmp_path, payload))

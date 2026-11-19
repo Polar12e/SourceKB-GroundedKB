@@ -81,3 +81,15 @@ def test_embed_documents_uses_cache(tmp_path) -> None:
 
     assert np.allclose(first, second)
     assert first.shape == (2, 2)
+
+
+def test_cache_identity_includes_lsa_hyperparameters() -> None:
+    a = LsaEmbedder(dim=4, seed=0)
+    b = LsaEmbedder(dim=4, seed=1)
+    assert a.cache_identity != b.cache_identity
+
+
+def test_cache_identity_includes_openai_endpoint() -> None:
+    a = OpenAICompatibleEmbedder(model="m", base_url="https://a.example/v1", dim=2)
+    b = OpenAICompatibleEmbedder(model="m", base_url="https://b.example/v1", dim=2)
+    assert a.cache_identity != b.cache_identity

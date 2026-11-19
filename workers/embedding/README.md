@@ -21,3 +21,10 @@ make py-test
 ```
 
 `workers/embedding/tests` 覆盖归一化、LSA、缓存、OpenAI 兼容 transport 假实现。
+
+## Provider 与缓存
+
+- `create_embedder()` 在 `workers/retrieval/pipeline.py` 中按 `provider: lsa|openai` 分发；
+- `LsaEmbedder.cache_identity` 包含 dim/min_df/max_df/seed；
+- `OpenAICompatibleEmbedder.cache_identity` 包含 model 与 base_url 指纹；
+- openai 的 key 只从 `api_key_env` 指定的环境变量读取。

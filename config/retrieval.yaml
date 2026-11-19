@@ -44,6 +44,15 @@ channels:
   dense:
     provider: lsa
     dim: 192
+    # OpenAI-compatible alternative (uncomment and provide the key in env):
+    # provider: openai
+    # model: text-embedding-3-small
+    # base_url: https://api.openai.com/v1
+    # dim: 1536
+    # api_key_env: OPENAI_API_KEY
+    # batch_size: 64
+    # timeout: 30
+    # retries: 2
   hybrid:
     channels:
       expanded: 1.0
