@@ -34,3 +34,6 @@ eval-results/
 
 # OS
 .DS_Store
+
+# 个人简历（含联系方式，勿入库）
+/01.*
