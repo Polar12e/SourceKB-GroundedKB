@@ -564,6 +564,40 @@
 - LLM prompt/JSON 解析、引用 verifier、token/cost 统计待接入。
 - 需要 key 后再做 live smoke。
 
+### 2026-11-19 19:27 · DeepSeek live probe + Agent LLM 路径
+
+**key / live**
+
+- `.env` 中 `DEEPSEEK_API_KEY` 已存在（只检查存在与非空，未输出内容）；`LLM_ENABLED` 仍为 `false`。
+- 手动把 `LLM_ENABLED=true` 后探测 model-gateway：
+  - HTTP 200，返回 `OK`，usage 10 tokens；
+  - 未记录 key/prompt。
+- 手动启用 `LLM_ENABLED=true` 跑一次 `/ask`：
+  - `status=ok`；
+  - 返回模型答案（重述原因），无抽取式警告；
+  - citation 为 `midea-2024` p199/p355/p126 的 anchor。
+- 默认仍保持 `LLM_ENABLED=false`，因此正常启动时 `/ask` 继续显示抽取式回答 + 警告。
+
+**Agent LLM 路径**
+
+- `NewHandlerWithLLM` + `internal/agent/llm.go`：
+  - 构造 evidence prompt，要求严格 JSON；
+  - 校验 citation 必须属于检索结果；
+  - 校验答案数字必须在 cited anchor 中出现；
+  - 失败回退抽取式警告；模型不可用不阻断 `/ask`。
+- `.env` 由 `run_local.sh` 加载（不打印）；system tests 仍显式关闭 LLM，避免真实调用。
+- `Answer` 契约保持 v0。
+
+**验证**
+
+- Go tests（含 LLM valid/unknown-citation/fallback）通过；
+- 14/14 系统测试通过；
+- 88 Python tests 不变。
+
+**未做**
+
+- 默认开启 LLM；prompt/模型质量评测；token/cost 统计；更严格 verifier。
+
 ---
 
 ## 2. 工作区清单（已读）
@@ -658,6 +692,7 @@
 | T1.17 | P0 证据粒度 / chunk 级融合 / prior / verbatim citation | `DONE` | anchor+channels；chunk 指标+指纹；expanded 0.875；88 tests |
 | T1.18 | 黑盒系统测试集（fixture） | `DONE` | 14 cases；发现并修复 400 error envelope；14/14 PASS |
 | T1.19 | LLM 接入准备：DeepSeek model-gateway + 抽取式警告 | `DONE` | `/v1/chat/completions`；默认关闭；14/14 system tests |
+| T1.20 | DeepSeek live probe + Agent LLM 路径 | `DONE` | key 探测 200；LLM `/ask` ok；citation/number verifier；默认关闭 |
 
 ### M2：Agent + 引用
 
@@ -700,7 +735,7 @@
 | 里程碑 | 验收标准 | 状态 | 主要依赖 |
 |---|---|---|---|
 | M0 契约与骨架 | `docker compose up` 可启动；`/healthz` 可用 | 进行中 | T0.5、T0.8；D3 沙箱 |
-| M1 检索切片 | 10 文档/10 题；Hit@4、Recall@4 baseline；页面/行号可回链 | 进行中 | 10 文档、Midea 10 题、跨文档 40 题、chunk 级指标、本地端到端、Xiaomi OCR、系统测试、LLM 接入准备已跑通；标注复核/DB ingest/规则 rerank/LLM 调用未完成 |
+| M1 检索切片 | 10 文档/10 题；Hit@4、Recall@4 baseline；页面/行号可回链 | 进行中 | 10 文档、Midea 10 题、跨文档 40 题、chunk 级指标、本地端到端、Xiaomi OCR、系统测试、LLM 路径已跑通；标注复核/DB ingest/规则 rerank/LLM 质量评测未完成 |
 | M2 Agent + 引用 | 10–20 题端到端；引用可核对；无证据拒答 | 未开始 | M1；T2.1–T2.6 |
 | M3 100 文档/100 题 | 100 题 Gold Evidence；四种方案对比报告 | 未开始 | M2；T3.1–T3.4 |
 | M4 平台化 | 异步 ingest、索引重建、观测、基础 Web | 未开始 | M3 |

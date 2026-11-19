@@ -4,17 +4,24 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
+	"strings"
 
 	agentapi "grounded-kb.local/internal/agent"
 	"grounded-kb.local/internal/platform/service"
 )
 
-func main() {
-	retrievalURL := os.Getenv("RETRIEVAL_URL")
-	if retrievalURL == "" {
-		retrievalURL = "http://127.0.0.1:8081"
+func envOr(key, fallback string) string {
+	if value := os.Getenv(key); value != "" {
+		return value
 	}
-	handler, err := agentapi.NewHandler(retrievalURL)
+	return fallback
+}
+
+func main() {
+	retrievalURL := envOr("RETRIEVAL_URL", "http://127.0.0.1:8081")
+	modelURL := envOr("MODEL_GATEWAY_URL", "http://127.0.0.1:8084")
+	llmEnabled := strings.EqualFold(strings.TrimSpace(os.Getenv("LLM_ENABLED")), "true")
+	handler, err := agentapi.NewHandlerWithLLM(retrievalURL, modelURL, llmEnabled)
 	if err != nil {
 		slog.Error("invalid retrieval URL", "error", err)
 		os.Exit(1)

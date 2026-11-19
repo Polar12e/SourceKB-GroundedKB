@@ -10,6 +10,14 @@ if [ ! -x "$ROOT/.venv/bin/python" ]; then
   exit 1
 fi
 
+# Load local secrets/config. Values are not printed.
+if [ -f "$ROOT/.env" ]; then
+  set -a
+  # shellcheck disable=SC1091
+  . "$ROOT/.env"
+  set +a
+fi
+
 mkdir -p "$ROOT/.tools"
 make -s build
 
@@ -22,6 +30,7 @@ else
 fi
 export RETRIEVAL_URL="${RETRIEVAL_URL:-http://127.0.0.1:8081}"
 export AGENT_URL="${AGENT_URL:-http://127.0.0.1:8083}"
+export MODEL_GATEWAY_URL="${MODEL_GATEWAY_URL:-http://127.0.0.1:8084}"
 
 pids=()
 cleanup() {

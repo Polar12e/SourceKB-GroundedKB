@@ -27,7 +27,7 @@
 - 四通路通用化：bm25 / expanded / dense / hybrid，由 `config/retrieval.yaml` 驱动；
 - 证据级评测：SearchHit anchor/channels、chunk Hit/Recall/nDCG、指纹；prior 改为 α=0.3；
 - 黑盒系统测试：retrieval/agent/gateway 12 条；发现并修复 400 错误 envelope；
-- LLM 接入准备：DeepSeek `deepseek-chat` model-gateway；`LLM_ENABLED=false`；agent 抽取式警告；
+- LLM 路径：DeepSeek `deepseek-chat` model-gateway + Agent LLM 调用/校验/fallback；默认 `LLM_ENABLED=false`，抽取式 + 警告；live probe 200 OK；
 - 10 文档本地语料：PDF parser + manifest + 页级 JSONL（美的/腾讯/中芯国际/小米）；
 - 10 题 retrieval eval：Hit@4=1.000 / Recall@4=0.975 / MRR=1.000，与旧 `bm25` 一致；
 - 跨文档 40 题 A/B：chunk 级 + prior 后 expanded 0.875 / hybrid 0.850，默认保持 expanded；

@@ -146,7 +146,7 @@ grounded-kb/
 - [x] CI 骨架
 - [x] 88 个 Python 测试 + Go service/proxy/agent 测试
 - [x] 14 条黑盒系统测试：retrieval/agent/gateway/model-gateway + 错误契约
-- [x] LLM 接入准备：DeepSeek `deepseek-chat` 路由、`LLM_ENABLED=false`、抽取式警告
+- [x] LLM 路径：DeepSeek `deepseek-chat` 路由 + Agent 调用/校验/fallback（默认关闭，抽取式警告）
 - [ ] 契约 v0 评审冻结
 - [x] Xiaomi 3 份 OCR：415/127/127 页，已合入 corpus，manifest=ocr
 - [ ] 第一个 ingest pipeline（数据库/索引服务）
@@ -192,7 +192,7 @@ curl -X POST http://127.0.0.1:8080/ask \
   -d '{"question":"2023年营业成本为什么重述？","top_k":3}'
 ```
 
-`/ask` 当前仍是**确定性抽取式基线**，回答会先提示“当前为抽取式基线，尚未接入 LLM 生成”。model-gateway 已准备 DeepSeek `deepseek-chat` 路由，但 `LLM_ENABLED=false`，不会调用外部模型。
+`/ask` 当前默认仍是**确定性抽取式基线**，回答会先提示“当前为抽取式基线，尚未接入 LLM 生成”。model-gateway 已准备 DeepSeek `deepseek-chat` 路由；在 `.env` 设置 `LLM_ENABLED=true` 并提供 `DEEPSEEK_API_KEY` 后，Agent 会调用 model-gateway，校验失败则回退抽取式。
 
 默认读取 `data/private/corpus/pages.jsonl`；如果没有 corpus，脚本会警告，`/search` 返回空、`/ask` 拒答。详细数据约定见 [data/README.md](data/README.md)。
 

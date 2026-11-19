@@ -112,6 +112,9 @@ services:
     environment:
       AGENT_PORT: "8083"
       RETRIEVAL_URL: http://retrieval:8081
+      MODEL_GATEWAY_URL: http://model-gateway:8084
+      LLM_ENABLED: ${LLM_ENABLED:-false}
+      LLM_API_KEY_ENV: ${LLM_API_KEY_ENV:-DEEPSEEK_API_KEY}
     ports:
       - "8083:8083"
     depends_on:

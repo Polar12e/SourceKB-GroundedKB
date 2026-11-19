@@ -12,7 +12,7 @@ export RETRIEVAL_CORPUS="$ROOT/tests/e2e/fixtures/pages.jsonl"
 export RETRIEVAL_MANIFEST="$ROOT/tests/e2e/fixtures/documents.json"
 export RETRIEVAL_URL="http://127.0.0.1:8081"
 export AGENT_URL="http://127.0.0.1:8083"
-export LLM_ENABLED="${LLM_ENABLED:-false}"
+export LLM_ENABLED=false
 
 pids=()
 cleanup() {

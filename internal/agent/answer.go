@@ -30,6 +30,7 @@ type anchor struct {
 }
 
 type searchHit struct {
+	ChunkID      string   `json:"chunk_id"`
 	DocumentID   string   `json:"document_id"`
 	Text         string   `json:"text"`
 	AnchorText   string   `json:"anchor_text"`
@@ -59,8 +60,6 @@ type answer struct {
 	TraceID   string     `json:"trace_id"`
 }
 
-const extractiveWarning = "【当前为抽取式基线，尚未接入 LLM 生成】\n\n"
-
 type errorBody struct {
 	Error struct {
 		Code    string `json:"code"`
@@ -72,17 +71,35 @@ type errorBody struct {
 // hit as an extractive answer. It is deliberately deterministic: no LLM yet.
 type Handler struct {
 	retrievalURL string
+	modelURL     string
+	llmEnabled   bool
 	client       *http.Client
+	modelClient  *http.Client
 }
 
 func NewHandler(retrievalURL string) (*Handler, error) {
+	return NewHandlerWithLLM(retrievalURL, "", false)
+}
+
+func NewHandlerWithLLM(retrievalURL, modelGatewayURL string, enabled bool) (*Handler, error) {
 	parsed, err := url.Parse(strings.TrimRight(retrievalURL, "/"))
 	if err != nil || parsed.Scheme == "" || parsed.Host == "" {
 		return nil, fmt.Errorf("invalid retrieval URL: %q", retrievalURL)
 	}
+	modelURL := ""
+	if enabled {
+		parsedModel, err := url.Parse(strings.TrimRight(modelGatewayURL, "/"))
+		if err != nil || parsedModel.Scheme == "" || parsedModel.Host == "" {
+			return nil, fmt.Errorf("invalid model gateway URL: %q", modelGatewayURL)
+		}
+		modelURL = parsedModel.String()
+	}
 	return &Handler{
 		retrievalURL: parsed.String(),
+		modelURL:     modelURL,
+		llmEnabled:   enabled,
 		client:       &http.Client{Timeout: 30 * time.Second},
+		modelClient:  &http.Client{Timeout: 60 * time.Second},
 	}, nil
 }
 
@@ -201,8 +218,18 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		})
 	}
 
+	warning := extractiveWarning
+	if h.llmEnabled {
+		if generated, err := h.answerWithLLM(r.Context(), request.Question, verified); err == nil {
+			generated.TraceID = traceID
+			writeJSON(w, http.StatusOK, generated)
+			return
+		}
+		warning = fallbackWarning
+	}
+
 	writeJSON(w, http.StatusOK, answer{
-		Answer:    extractiveWarning + quote,
+		Answer:    warning + quote,
 		Status:    "ok",
 		Citations: citations,
 		TraceID:   traceID,
