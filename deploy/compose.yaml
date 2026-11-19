@@ -38,6 +38,10 @@ services:
       dockerfile: workers/retrieval/Dockerfile
     environment:
       RETRIEVAL_PORT: "8081"
+      RETRIEVAL_CORPUS: /data/private/corpus/pages.jsonl
+      RETRIEVAL_MANIFEST: /data/manifests/documents.json
+    volumes:
+      - ../data:/data:ro
     ports:
       - "8081:8081"
     healthcheck:
@@ -61,9 +65,13 @@ services:
         SERVICE: gateway
     environment:
       GATEWAY_PORT: "8080"
+      RETRIEVAL_URL: http://retrieval:8081
+      AGENT_URL: http://agent:8083
     ports:
       - "8080:8080"
     depends_on:
+      agent:
+        condition: service_healthy
       retrieval:
         condition: service_healthy
     healthcheck:
@@ -103,6 +111,7 @@ services:
         SERVICE: agent
     environment:
       AGENT_PORT: "8083"
+      RETRIEVAL_URL: http://retrieval:8081
     ports:
       - "8083:8083"
     depends_on:

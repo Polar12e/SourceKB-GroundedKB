@@ -28,6 +28,7 @@
 - 10 文档本地语料：PDF parser + manifest + 页级 JSONL（美的/腾讯/中芯国际/小米）；
 - 10 题 retrieval eval：Hit@4=1.000 / Recall@4=0.975 / MRR=1.000，与旧 `bm25` 一致；
 - 跨文档 40 题 A/B：修正 Gold 后 hybrid 与 expanded 持平，默认保持 expanded；
+- 本地端到端切片：gateway /search + /ask → retrieval；agent 抽取式回答/拒答；
 - 契约 v0 草案（13 个 JSON Schema + OpenAPI）；
 - Compose / Dockerfile 骨架（`config` 校验通过，未在会话内运行）；
 - CI 骨架。

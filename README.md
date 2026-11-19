@@ -134,6 +134,7 @@ grounded-kb/
 - [x] RAG 资产：财务名词表（terms.json）/ embedding provider（lsa/openai）/ dense channel + RAG notes
 - [x] 四通路通用化：bm25 / expanded / dense / hybrid 由 config/retrieval.yaml 驱动
 - [x] 跨文档 40 题 A/B：标注修正后 hybrid 与 expanded 持平，默认保持 expanded
+- [x] 本地端到端切片：gateway → agent → retrieval（抽取式回答 + 拒答兜底）
 - [x] 10 文档本地语料：PDF parser + manifest + 页级 JSONL
 - [x] 契约 v0 草案：13 个 JSON Schema + OpenAPI（待评审冻结）
 - [x] Compose + Dockerfile 骨架（`config` 校验通过；未在会话内运行）
@@ -152,6 +153,18 @@ grounded-kb/
 ## 6. 快速开始
 
 当前可运行 Go 服务与 Python retrieval 服务；Compose 文件可校验，但真正 `up` 需要宿主机可访问 Docker socket。
+
+一条命令启动本地端到端切片（gateway → agent → retrieval）：
+
+```bash
+make run-local
+# 另开终端
+curl http://127.0.0.1:8080/healthz
+curl -X POST http://127.0.0.1:8080/search   -H 'content-type: application/json'   -d '{"query":"营业收入","top_k":3}'
+curl -X POST http://127.0.0.1:8080/ask   -H 'content-type: application/json'   -d '{"question":"2023年营业成本为什么重述？","top_k":3}'
+```
+
+`/ask` 当前是确定性抽取式基线：取 top hit 原文 + citation；无命中返回 `insufficient_evidence`。LLM 生成、引用校验与拒答策略仍在 T2。
 
 Go 服务：
 

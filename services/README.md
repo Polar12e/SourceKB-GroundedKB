@@ -4,12 +4,12 @@ Go 服务边界：
 
 | 服务 | 职责 | 状态 |
 |---|---|---|
-| `gateway` | HTTP API、认证、限流、trace | 骨架（`/healthz`） |
+| `gateway` | HTTP API、认证、限流、trace | 骨架 + `/search` `/ask` 代理 |
 | `ingest` | 上传、任务状态、幂等、队列 | 骨架（`/healthz`） |
-| `agent` | 工具注册、策略、超时、step trace | 骨架（`/healthz`） |
+| `agent` | 工具注册、策略、超时、step trace | 骨架 + `/ask` 抽取式回答 |
 | `model-gateway` | provider 路由、重试、成本统计 | 骨架（`/healthz`） |
 
-当前为 M0 骨架：共享配置、健康检查、优雅关闭；业务接口待契约冻结后实现。
+当前为 M0 可运行切片：gateway → agent → retrieval；ingest/model-gateway 仍只有健康检查。
 
 第一版优先：
 

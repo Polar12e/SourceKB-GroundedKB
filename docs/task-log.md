@@ -424,6 +424,32 @@
 - 40 题标注仍需人工复核；Xiaomi OCR；DB ingest。
 - RRF 权重/dense gating 未调整（未过门槛）。
 
+### 2026-11-19 16:32 · 本地端到端切片
+
+**实现**
+
+- `service.RunWithRoutes`：服务可注册业务路由，保留健康检查/优雅关闭。
+- `internal/agent`：`POST /ask` 调 retrieval，返回 top hit 原文 + citation；无命中返回 `insufficient_evidence`。
+- `internal/platform/proxy`：Gateway 的 `/search`、`/ask` 反向代理到 retrieval/agent。
+- `scripts/run_local.sh` + `make run-local`：一条命令启动 retrieval、agent、gateway。
+- Compose：gateway/agent 的 `RETRIEVAL_URL`、`AGENT_URL`；retrieval 挂载 `../data:/data:ro`。
+- `/docs` 中补充本地端到端说明；ingest/model-gateway 仍为健康检查骨架。
+
+**验证**
+
+- `make test` / `make vet` / `make build` 通过；Go 新增 agent/proxy 测试。
+- 本地栈实测：
+  - `/search` 返回 Midea 199/355；
+  - `/ask` 返回 `ok` + citation（Midea 199）；
+  - 纯 OOV query 返回 `insufficient_evidence`；
+  - 带 `company=00700.HK` 的 ask 返回腾讯 2025H1。
+- Python 84 tests 通过；Compose config 通过。
+
+**未做**
+
+- 无 LLM 生成；当前是抽取式基线。
+- ingest 上传/索引、model gateway 业务、auth/rate limit/trace 未实现。
+
 ---
 
 ## 2. 工作区清单（已读）
@@ -513,6 +539,7 @@
 | T1.12 | 跨文档 40 题 A/B 评估（初版） | `DONE` | 初版标注；T1.14 修正后 hybrid/expanded 持平 |
 | T1.13 | Dense provider 分发 + OpenAI 配置校验 | `DONE` | `create_embedder`；channels 配置；缓存 identity；82 tests |
 | T1.14 | 合法答案页标注 + 跨文档复评 | `DONE` | 15 acceptable / 9 hard_negatives；hybrid 腾讯回退消失；默认不变 |
+| T1.15 | 本地端到端切片：gateway → agent → retrieval | `DONE` | `/search` `/ask` 代理；抽取式回答/拒答；`make run-local` |
 
 ### M2：Agent + 引用
 
@@ -555,7 +582,7 @@
 | 里程碑 | 验收标准 | 状态 | 主要依赖 |
 |---|---|---|---|
 | M0 契约与骨架 | `docker compose up` 可启动；`/healthz` 可用 | 进行中 | T0.5、T0.8；D3 沙箱 |
-| M1 检索切片 | 10 文档/10 题；Hit@4、Recall@4 baseline；页面/行号可回链 | 进行中 | 10 文档、Midea 10 题、跨文档 40 题复评已完成；hybrid/expanded 持平，默认不变；标注复核/Xiaomi OCR/DB ingest 未完成 |
+| M1 检索切片 | 10 文档/10 题；Hit@4、Recall@4 baseline；页面/行号可回链 | 进行中 | 10 文档、Midea 10 题、跨文档 40 题、本地端到端已跑通；标注复核/Xiaomi OCR/DB ingest 未完成 |
 | M2 Agent + 引用 | 10–20 题端到端；引用可核对；无证据拒答 | 未开始 | M1；T2.1–T2.6 |
 | M3 100 文档/100 题 | 100 题 Gold Evidence；四种方案对比报告 | 未开始 | M2；T3.1–T3.4 |
 | M4 平台化 | 异步 ingest、索引重建、观测、基础 Web | 未开始 | M3 |

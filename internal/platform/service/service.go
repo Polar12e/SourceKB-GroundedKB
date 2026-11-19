@@ -27,6 +27,15 @@ func NewMux(name string) *http.ServeMux {
 
 // Run starts the named service on portEnv/defaultPort and blocks until shutdown.
 func Run(name, portEnv string, defaultPort int) error {
+	return RunWithRoutes(name, portEnv, defaultPort, nil)
+}
+
+// RunWithRoutes is Run plus a hook for service-specific routes.
+func RunWithRoutes(
+	name, portEnv string,
+	defaultPort int,
+	register func(*http.ServeMux) error,
+) error {
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, nil))
 	slog.SetDefault(logger)
 
@@ -35,10 +44,17 @@ func Run(name, portEnv string, defaultPort int) error {
 		return err
 	}
 
+	mux := NewMux(name)
+	if register != nil {
+		if err := register(mux); err != nil {
+			return fmt.Errorf("%s routes: %w", name, err)
+		}
+	}
+
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 
-	srv := httpserver.New(config.Addr(port), NewMux(name))
+	srv := httpserver.New(config.Addr(port), mux)
 	logger.Info("service starting", "service", name, "addr", srv.Addr)
 
 	if err := httpserver.Run(ctx, srv, shutdownTimeout); err != nil {
