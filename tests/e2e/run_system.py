@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
 import sys
 import time
@@ -14,7 +15,12 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_CASES = Path(__file__).parent / "cases.json"
 DEFAULT_REPORT = Path(__file__).parent / "report.md"
-PORTS = {"gateway": 8080, "retrieval": 8081, "agent": 8083, "model-gateway": 8084}
+PORTS = {
+    "gateway": int(os.getenv("E2E_GATEWAY_PORT", "18080")),
+    "retrieval": int(os.getenv("E2E_RETRIEVAL_PORT", "18081")),
+    "agent": int(os.getenv("E2E_AGENT_PORT", "18083")),
+    "model-gateway": int(os.getenv("E2E_MODEL_GATEWAY_PORT", "18084")),
+}
 LINE_PREFIX = re.compile(r"^\s*\d+\s*:")
 
 

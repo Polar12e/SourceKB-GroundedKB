@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log/slog"
 	"net/http"
 	"net/url"
 	"strings"
@@ -224,6 +225,8 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			generated.TraceID = traceID
 			writeJSON(w, http.StatusOK, generated)
 			return
+		} else {
+			slog.Warn("llm answer rejected", "reason", err, "trace_id", traceID)
 		}
 		warning = fallbackWarning
 	}

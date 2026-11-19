@@ -174,3 +174,28 @@ func TestLLMFallsBackWhenCitationIsUnknown(t *testing.T) {
 		t.Fatalf("fallback body = %+v", body)
 	}
 }
+
+func TestLLMAcceptsUnitConversionWhenNumberIsGrounded(t *testing.T) {
+	retrieval := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		_, _ = w.Write([]byte(`{"hits":[{"chunk_id":"doc:p1:c0","document_id":"doc","text":"window","anchor_text":"遊戲 130,115 百萬元","locator":{"page":1,"line_start":1,"line_end":2},"anchor":{"line_start":1,"line_end":2},"channels":["expanded"],"score":2.5,"matched_terms":["遊戲"]}]}`))
+	}))
+	defer retrieval.Close()
+	model := modelWithContent(t, `{"answer":"遊戲收入為1,301.15億元","citations":["doc:p1:c0"],"status":"ok"}`)
+	defer model.Close()
+
+	handler, err := NewHandlerWithLLM(retrieval.URL, model.URL, true)
+	if err != nil {
+		t.Fatal(err)
+	}
+	request := httptest.NewRequest(http.MethodPost, "/ask", strings.NewReader(`{"question":"遊戲收入"}`))
+	response := httptest.NewRecorder()
+	handler.ServeHTTP(response, request)
+
+	var body answer
+	if err := json.Unmarshal(response.Body.Bytes(), &body); err != nil {
+		t.Fatal(err)
+	}
+	if body.Status != "ok" || !strings.Contains(body.Answer, "1,301.15") {
+		t.Fatalf("body = %+v", body)
+	}
+}

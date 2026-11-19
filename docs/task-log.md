@@ -598,6 +598,31 @@
 
 - 默认开启 LLM；prompt/模型质量评测；token/cost 统计；更严格 verifier。
 
+### 2026-11-19 19:56 · Verifier 支持单位换算
+
+**问题**
+
+- 真实 `/ask` 出现 `【LLM 调用未通过校验】` 回退。
+- 原因：模型输出 `1,301.15 亿元`，证据写 `130,115 百万元`；旧 verifier 只做数字字符串完全匹配。
+
+**修复**
+
+- `internal/agent/llm.go`：
+  - 数字解析去逗号；
+  - 数值近似比较；
+  - 接受 `×100 / ÷100` 单位换算（百万↔亿）；
+  - 仍要求数字必须出现在 cited anchor 中。
+- 新增 Go 测试：`1,301.15 亿元` 对 `130,115 百万元` 应通过。
+
+**真实重测**
+
+- 问题：腾讯 2026 上半年游戏业务收入合计 / 社交网络收入。
+- `status=ok`，无抽取式警告；
+- 回答：游戏 **130,115 百万元**，社交网络 **64,409 百万元**；
+- citation：`tencent-2026h1` p47 L1-51。
+- 当前 `.env` 为 `LLM_ENABLED=true`（用户手动设置）。
+- 系统测试改用独立端口 `18080-18084`，避免与正在运行的手动栈冲突。
+
 ---
 
 ## 2. 工作区清单（已读）
@@ -693,6 +718,7 @@
 | T1.18 | 黑盒系统测试集（fixture） | `DONE` | 14 cases；发现并修复 400 error envelope；14/14 PASS |
 | T1.19 | LLM 接入准备：DeepSeek model-gateway + 抽取式警告 | `DONE` | `/v1/chat/completions`；默认关闭；14/14 system tests |
 | T1.20 | DeepSeek live probe + Agent LLM 路径 | `DONE` | key 探测 200；LLM `/ask` ok；citation/number verifier；默认关闭 |
+| T1.21 | Verifier 数值单位换算 | `DONE` | 1,301.15 亿元 ↔ 130,115 百万元；真实 H1 问答通过 |
 
 ### M2：Agent + 引用
 

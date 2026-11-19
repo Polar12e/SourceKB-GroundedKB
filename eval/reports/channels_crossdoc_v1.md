@@ -9,7 +9,7 @@
 ## 指纹
 
 - `corpus_sha256`: `fab0dd23ba50a7aca0d1627bd69c6874b55c99912f098f1ded0d06fbce3b3b12`
-- `config_sha256`: `65bfb83e8842fd1e0e04b0e8fb4212eda5ee92f3cee3e99ec1f865b768ff0744`
+- `config_sha256`: `81d6a4e7fe72b1fdec5980cdfab4222d8359e4c4333044e538159271458487c2`
 - `git_rev`: `6b2588a2d3ff94b2247b6edad616d9dd45dd5143`
 - 复现：`make eval-crossdoc`
 

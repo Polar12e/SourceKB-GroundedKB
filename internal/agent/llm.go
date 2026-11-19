@@ -7,8 +7,10 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"math"
 	"net/http"
 	"regexp"
+	"strconv"
 	"strings"
 )
 
@@ -46,6 +48,40 @@ type citationIndex struct {
 }
 
 var numberPattern = regexp.MustCompile(`\d[\d,]*(?:\.\d+)?`)
+
+func parseNumber(raw string) (float64, bool) {
+	value, err := strconv.ParseFloat(strings.ReplaceAll(raw, ",", ""), 64)
+	return value, err == nil
+}
+
+func nearlyEqual(a, b float64) bool {
+	scale := math.Max(math.Abs(a), math.Abs(b))
+	return math.Abs(a-b) <= 1e-6*math.Max(scale, 1)
+}
+
+// numberSupported accepts the same measurement even when the model converts
+// units (for example 130,115 百万元 -> 1,301.15 亿元).
+func numberSupported(answerNumber, citedText string) bool {
+	if strings.Contains(citedText, answerNumber) {
+		return true
+	}
+	answerValue, ok := parseNumber(answerNumber)
+	if !ok {
+		return false
+	}
+	for _, citedNumber := range numberPattern.FindAllString(citedText, -1) {
+		citedValue, ok := parseNumber(citedNumber)
+		if !ok {
+			continue
+		}
+		if nearlyEqual(answerValue, citedValue) ||
+			nearlyEqual(answerValue*100, citedValue) ||
+			nearlyEqual(answerValue, citedValue*100) {
+			return true
+		}
+	}
+	return false
+}
 
 func (h *Handler) answerWithLLM(ctx context.Context, question string, hits []searchHit) (answer, error) {
 	if h.modelURL == "" {
@@ -140,7 +176,7 @@ func (h *Handler) answerWithLLM(ctx context.Context, question string, hits []sea
 		citedText += "\n" + item.hit.AnchorText
 	}
 	for _, number := range numberPattern.FindAllString(parsed.Answer, -1) {
-		if !strings.Contains(citedText, number) {
+		if !numberSupported(number, citedText) {
 			return answer{}, fmt.Errorf("answer number %q is not present in cited evidence", number)
 		}
 	}

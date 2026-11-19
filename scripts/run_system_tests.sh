@@ -10,8 +10,14 @@ make -s build
 
 export RETRIEVAL_CORPUS="$ROOT/tests/e2e/fixtures/pages.jsonl"
 export RETRIEVAL_MANIFEST="$ROOT/tests/e2e/fixtures/documents.json"
-export RETRIEVAL_URL="http://127.0.0.1:8081"
-export AGENT_URL="http://127.0.0.1:8083"
+# Dedicated ports so a developer's live stack on 8080-8084 cannot interfere.
+export GATEWAY_PORT=18080
+export RETRIEVAL_PORT=18081
+export AGENT_PORT=18083
+export MODEL_GATEWAY_PORT=18084
+export RETRIEVAL_URL="http://127.0.0.1:18081"
+export AGENT_URL="http://127.0.0.1:18083"
+export MODEL_GATEWAY_URL="http://127.0.0.1:18084"
 export LLM_ENABLED=false
 
 pids=()
@@ -24,31 +30,31 @@ cleanup() {
 trap cleanup EXIT INT TERM
 
 "$ROOT/.venv/bin/python" -m uvicorn workers.retrieval.app:app \
-  --host 127.0.0.1 --port 8081 >"$ROOT/.tools/system-retrieval.log" 2>&1 &
+  --host 127.0.0.1 --port "$RETRIEVAL_PORT" >"$ROOT/.tools/system-retrieval.log" 2>&1 &
 pids+=("$!")
 for _ in $(seq 1 60); do
-  curl -fsS http://127.0.0.1:8081/healthz >/dev/null 2>&1 && break
+  curl -fsS http://127.0.0.1:$RETRIEVAL_PORT/healthz >/dev/null 2>&1 && break
   sleep 0.2
 done
 
 "$ROOT/bin/agent" >"$ROOT/.tools/system-agent.log" 2>&1 &
 pids+=("$!")
 for _ in $(seq 1 60); do
-  curl -fsS http://127.0.0.1:8083/healthz >/dev/null 2>&1 && break
+  curl -fsS http://127.0.0.1:$AGENT_PORT/healthz >/dev/null 2>&1 && break
   sleep 0.2
 done
 
 "$ROOT/bin/model-gateway" >"$ROOT/.tools/system-model-gateway.log" 2>&1 &
 pids+=("$!")
 for _ in $(seq 1 60); do
-  curl -fsS http://127.0.0.1:8084/healthz >/dev/null 2>&1 && break
+  curl -fsS http://127.0.0.1:$MODEL_GATEWAY_PORT/healthz >/dev/null 2>&1 && break
   sleep 0.2
 done
 
 "$ROOT/bin/gateway" >"$ROOT/.tools/system-gateway.log" 2>&1 &
 pids+=("$!")
 for _ in $(seq 1 60); do
-  curl -fsS http://127.0.0.1:8080/healthz >/dev/null 2>&1 && break
+  curl -fsS http://127.0.0.1:$GATEWAY_PORT/healthz >/dev/null 2>&1 && break
   sleep 0.2
 done
 
