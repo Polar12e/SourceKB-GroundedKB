@@ -24,10 +24,20 @@ type locator struct {
 	LineEnd   int `json:"line_end"`
 }
 
+type anchor struct {
+	LineStart int `json:"line_start"`
+	LineEnd   int `json:"line_end"`
+}
+
 type searchHit struct {
-	DocumentID string  `json:"document_id"`
-	Text       string  `json:"text"`
-	Locator    locator `json:"locator"`
+	DocumentID   string   `json:"document_id"`
+	Text         string   `json:"text"`
+	AnchorText   string   `json:"anchor_text"`
+	Locator      locator  `json:"locator"`
+	Anchor       anchor   `json:"anchor"`
+	Channels     []string `json:"channels"`
+	Score        float64  `json:"score"`
+	MatchedTerms []string `json:"matched_terms"`
 }
 
 type searchResponse struct {
@@ -154,30 +164,63 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	hit := results.Hits[0]
-	quote := strings.TrimSpace(hit.Text)
-	if quote == "" {
+	verified := make([]searchHit, 0, len(results.Hits))
+	for _, hit := range results.Hits {
+		if verifyHit(hit) {
+			verified = append(verified, hit)
+		}
+	}
+	if len(verified) == 0 {
 		writeJSON(w, http.StatusOK, answer{
-			Answer:    "insufficient evidence",
-			Status:    "insufficient_evidence",
+			Answer:    "evidence could not be verified",
+			Status:    "unverified",
 			Citations: []citation{},
 			TraceID:   traceID,
 		})
 		return
 	}
 
-	writeJSON(w, http.StatusOK, answer{
-		Answer: quote,
-		Status: "ok",
-		Citations: []citation{{
+	// Use the evidence set rather than blindly treating the first raw hit as
+	// the answer. The best verified chunk supplies the extractive answer; up to
+	// three verified chunks are exposed as citations.
+	best := verified[0]
+	quote := strings.TrimSpace(best.AnchorText)
+	citations := make([]citation, 0, 3)
+	for _, hit := range verified {
+		if len(citations) == 3 {
+			break
+		}
+		citations = append(citations, citation{
 			DocumentID: hit.DocumentID,
 			Page:       hit.Locator.Page,
-			LineStart:  hit.Locator.LineStart,
-			LineEnd:    hit.Locator.LineEnd,
-			Quote:      quote,
-		}},
-		TraceID: traceID,
+			LineStart:  hit.Anchor.LineStart,
+			LineEnd:    hit.Anchor.LineEnd,
+			Quote:      strings.TrimSpace(hit.AnchorText),
+		})
+	}
+
+	writeJSON(w, http.StatusOK, answer{
+		Answer:    quote,
+		Status:    "ok",
+		Citations: citations,
+		TraceID:   traceID,
 	})
+}
+
+func verifyHit(hit searchHit) bool {
+	quote := strings.TrimSpace(hit.AnchorText)
+	if quote == "" || hit.Score <= 0 || len(hit.MatchedTerms) == 0 {
+		return false
+	}
+	if hit.Locator.Page < 1 || hit.Anchor.LineStart < 1 || hit.Anchor.LineEnd < hit.Anchor.LineStart {
+		return false
+	}
+	// The anchor must be inside the returned context window. This catches
+	// malformed locators even though the retrieval service owns the source text.
+	if hit.Anchor.LineStart < hit.Locator.LineStart || hit.Anchor.LineEnd > hit.Locator.LineEnd {
+		return false
+	}
+	return true
 }
 
 func writeJSON(w http.ResponseWriter, status int, value any) {

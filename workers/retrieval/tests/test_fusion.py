@@ -96,3 +96,4 @@ def test_pages_keep_the_best_channel_hit_metadata() -> None:
 
     assert hit.chunk_id == "doc:p1:c0"
     assert hit.channel == "a"
+    assert hit.channels == ("a", "b")

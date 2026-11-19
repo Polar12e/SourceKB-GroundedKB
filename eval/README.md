@@ -6,10 +6,20 @@ Retrieval benchmark 与评测入口。
 ## 合法答案页判定
 
 - **canonical `gold_evidence`**：首选证据页，必须包含完整事实（主体、期间、数值/单位/结论），用于 Recall。
-- **`acceptable_evidence`**：同一事实在其他页面的合法披露（摘要/正文/报表重复），用于 Hit/MRR/precision。
+- **`acceptable_evidence`**：同一事实在其他页面的合法披露（摘要/正文/报表重复），用于同页/同 chunk 命中与 precision。
 - **`hard_negatives`**：与 query 高相似但不含答案，或期间/主体不匹配的页面；不参与命中，但用于检查引用是否被噪声页污染。
 
 原则：**相似度 ≠ 合法性**。术语表、董事会报告、审计报告等即使词重叠很高，也不能标为答案页。
+
+评测同时输出：
+
+- **page Hit/MRR**：页面级，用于与旧报告连续；
+- **chunk Hit/Recall**：命中 chunk 的 anchor 行区间必须与证据行区间重叠；
+- **chunk nDCG@10**：证据级排序质量；
+- **hard_negative_hits**：top-k 中落入了多少 hard negative；
+- **指纹**：`corpus_sha256` / `config_sha256` / `terms_sha256` / `cases_sha256` / `git_rev`。
+
+`SearchHit` 现在带 `anchor`、`anchor_text`、`channels`；`citation.quote` 必须使用 `anchor_text`，不能用带行号的 window。
 
 ## 当前数据集
 

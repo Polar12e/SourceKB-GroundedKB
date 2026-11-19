@@ -476,6 +476,45 @@
 
 - OCR 逐字校对；Xiaomi 评测题；ingest/DB。
 
+### 2026-11-19 17:34 · P0 证据粒度 / prior / verbatim citation
+
+**候选层**
+
+- `SearchHit` 增加 `anchor` 行区间、`anchor_text`（chunk 原文）与 `channels` 票数；`to_contract` 同步扩展，schema/example 更新。
+- BM25 / Dense 从“页面聚合”改为 chunk 级排序；同页多 chunk 不再在检索阶段被折叠。
+- Hybrid 按 `chunk_id` 融合，`replace()` 不再覆盖 channel，而是累积投票通道。
+- 页面/文档分组后置到响应/展示层。
+
+**评测 v2**
+
+- 同时输出 page/chunk Hit、chunk Recall、chunk nDCG@10、hard_neg 与 top chunks。
+- 报告写入 `corpus_sha256 / config_sha256 / terms_sha256 / cases_sha256 / git_rev`。
+- 新增 `eval/fingerprint.py` 与测试；`eval/run_ab.py`、`eval/run_crossdoc.py` 同步。
+
+**prior**
+
+- `statement_bonus` 从固定 +18 改为 `score *= 1+α`，α=0.3。
+- 跨文档 expanded：page/chunk Hit 0.875，chunk Recall 0.719，nDCG 0.596，hard_neg 12。
+- hybrid 0.850；dense 0.675（chunk 0.575）。默认仍 `expanded`。
+
+**答案层**
+
+- Agent 改用 `anchor_text` 作为 quote/answer，去掉带行号的 window。
+- 最多返回 3 条 verified citations；malformed evidence 返回 `unverified`。
+- `Answer.status` 扩展 `unverified` / `conflicting_evidence`。
+- 当前 verifier 仅做 anchor/locator/score/matched_terms 基础校验，数值/年份/单位校验未完成。
+
+**验证**
+
+- 88 Python tests；Go agent tests；`make contracts` 通过。
+- 本地 `/search` 已返回 `anchor`/`channels`；`/ask` 引用 anchor 行区间。
+
+**未做**
+
+- 规则型 rerank 未启用（先有证据级指标，再调特征）。
+- 完整 abstention precision/recall、数值 verifier、composer v2。
+- P1 index version / trace / parser 重做。
+
 ---
 
 ## 2. 工作区清单（已读）
@@ -567,6 +606,7 @@
 | T1.14 | 合法答案页标注 + 跨文档复评 | `DONE` | 15 acceptable / 9 hard_negatives；hybrid 腾讯回退消失；默认不变 |
 | T1.15 | 本地端到端切片：gateway → agent → retrieval | `DONE` | `/search` `/ask` 代理；抽取式回答/拒答；`make run-local` |
 | T1.16 | Xiaomi 3 份 OCR 并合入 corpus | `DONE` | 415/127/127 页；manifest=ocr；跨文档复评 |
+| T1.17 | P0 证据粒度 / chunk 级融合 / prior / verbatim citation | `DONE` | anchor+channels；chunk 指标+指纹；expanded 0.875；88 tests |
 
 ### M2：Agent + 引用
 
@@ -609,7 +649,7 @@
 | 里程碑 | 验收标准 | 状态 | 主要依赖 |
 |---|---|---|---|
 | M0 契约与骨架 | `docker compose up` 可启动；`/healthz` 可用 | 进行中 | T0.5、T0.8；D3 沙箱 |
-| M1 检索切片 | 10 文档/10 题；Hit@4、Recall@4 baseline；页面/行号可回链 | 进行中 | 10 文档、Midea 10 题、跨文档 40 题、本地端到端、Xiaomi OCR 已跑通；标注复核/DB ingest 未完成 |
+| M1 检索切片 | 10 文档/10 题；Hit@4、Recall@4 baseline；页面/行号可回链 | 进行中 | 10 文档、Midea 10 题、跨文档 40 题、chunk 级指标、本地端到端、Xiaomi OCR 已跑通；标注复核/DB ingest/规则 rerank 未完成 |
 | M2 Agent + 引用 | 10–20 题端到端；引用可核对；无证据拒答 | 未开始 | M1；T2.1–T2.6 |
 | M3 100 文档/100 题 | 100 题 Gold Evidence；四种方案对比报告 | 未开始 | M2；T3.1–T3.4 |
 | M4 平台化 | 异步 ingest、索引重建、观测、基础 Web | 未开始 | M3 |

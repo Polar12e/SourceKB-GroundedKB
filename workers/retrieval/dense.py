@@ -114,27 +114,23 @@ class DenseIndex:
             return []
 
         similarities = self.vectors @ query_vector
-        best_by_page: dict[tuple[str, int], tuple[float, int]] = {}
-        for index, similarity in enumerate(similarities.tolist()):
-            chunk = self.chunks[index]
-            if not matches_filters(chunk.document_id, self.documents, active_filters):
-                continue
-            key = (chunk.document_id, chunk.page)
-            if key not in best_by_page or similarity > best_by_page[key][0]:
-                best_by_page[key] = (float(similarity), index)
-
-        ranked = sorted(
-            best_by_page.values(),
+        scored = [
+            (float(similarity), index)
+            for index, similarity in enumerate(similarities.tolist())
+            if matches_filters(self.chunks[index].document_id, self.documents, active_filters)
+            and float(similarity) > 0
+        ]
+        scored.sort(
             key=lambda item: (
                 -item[0],
                 self.chunks[item[1]].document_id,
                 self.chunks[item[1]].page,
                 self.chunks[item[1]].index,
-            ),
+            )
         )
 
         hits: list[SearchHit] = []
-        for score, index in ranked[:top_k]:
+        for score, index in scored[:top_k]:
             chunk = self.chunks[index]
             window = window_for_lines(
                 self.page_text(chunk.document_id, chunk.page),
@@ -156,9 +152,12 @@ class DenseIndex:
                     line_start=window.line_start,
                     line_end=window.line_end,
                     text=window.text,
+                    anchor_start=chunk.line_start,
+                    anchor_end=chunk.line_end,
+                    anchor_text=chunk.text,
                     score=score,
                     matched_terms=matched,
-                    channel="dense",
+                    channels=("dense",),
                 )
             )
         return hits

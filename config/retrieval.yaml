@@ -34,7 +34,8 @@ profiles:
       - 合并资产负债表
       - 合并现金流量表
     notes_markers: [为什么, 重述, 重分类, 影响, 附注, 会计政策, 调整]
-    statement_bonus: 18.0
+    # multiplicative page prior alpha: score *= (1 + alpha)
+    statement_bonus: 0.3
 
 channels:
   bm25:

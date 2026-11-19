@@ -10,7 +10,7 @@
       "type": "string"
     },
     "status": {
-      "enum": ["ok", "insufficient_evidence", "error"]
+      "enum": ["ok", "insufficient_evidence", "unverified", "conflicting_evidence", "error"]
     },
     "citations": {
       "type": "array",

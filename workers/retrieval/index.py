@@ -39,7 +39,12 @@ class QueryProfile(Protocol):
 
 @dataclass(frozen=True)
 class SearchHit:
-    """Internal hit; page/line fields are flattened into a contract locator."""
+    """Chunk-level hit with a context window and the matched anchor.
+
+    ``locator``/``text`` describe the surrounding window for display. ``anchor``
+    and ``anchor_text`` identify the exact matched chunk, so evidence verifiers
+    and chunk-level evaluation do not have to infer it from the window.
+    """
 
     chunk_id: str
     document_id: str
@@ -49,9 +54,20 @@ class SearchHit:
     text: str
     score: float
     matched_terms: tuple[str, ...] = ()
-    channel: str = "bm25"
+    channels: tuple[str, ...] = ("bm25",)
+    anchor_start: int | None = None
+    anchor_end: int | None = None
+    anchor_text: str | None = None
+
+    @property
+    def channel(self) -> str:
+        """Primary channel, kept for callers that only need one label."""
+
+        return self.channels[0] if self.channels else "bm25"
 
     def to_contract(self) -> dict[str, object]:
+        anchor_start = self.anchor_start if self.anchor_start is not None else self.line_start
+        anchor_end = self.anchor_end if self.anchor_end is not None else self.line_end
         return {
             "chunk_id": self.chunk_id,
             "document_id": self.document_id,
@@ -61,6 +77,12 @@ class SearchHit:
                 "line_start": self.line_start,
                 "line_end": self.line_end,
             },
+            "anchor": {
+                "line_start": anchor_start,
+                "line_end": anchor_end,
+            },
+            "anchor_text": self.anchor_text if self.anchor_text is not None else self.text,
+            "channels": list(self.channels or ("bm25",)),
             "score": self.score,
             "matched_terms": list(self.matched_terms),
         }
@@ -80,6 +102,7 @@ class BM25Index:
         documents: Mapping[str, DocumentMeta] | None = None,
         window_radius: int = WINDOW_RADIUS,
         window_max_chars: int = WINDOW_MAX_CHARS,
+        channel_name: str = "bm25",
     ) -> None:
         if k1 < 0:
             raise ValueError("k1 must be >= 0")
@@ -93,6 +116,7 @@ class BM25Index:
         self.documents = dict(documents or {})
         self.window_radius = window_radius
         self.window_max_chars = window_max_chars
+        self.channel_name = channel_name
         self.tokens = [tokenize(chunk.text) for chunk in chunks]
         self.term_counts = [Counter(tokens) for tokens in self.tokens]
         self.lengths = [len(tokens) for tokens in self.tokens]
@@ -120,6 +144,7 @@ class BM25Index:
         documents: Mapping[str, DocumentMeta] | None = None,
         window_radius: int = WINDOW_RADIUS,
         window_max_chars: int = WINDOW_MAX_CHARS,
+        channel_name: str = "bm25",
     ) -> BM25Index:
         page_list = list(pages)
         page_text: dict[tuple[str, int], str] = {}
@@ -137,6 +162,7 @@ class BM25Index:
             documents=documents,
             window_radius=window_radius,
             window_max_chars=window_max_chars,
+            channel_name=channel_name,
         )
 
     def page_text(self, document_id: str, page: int) -> str:
@@ -199,28 +225,30 @@ class BM25Index:
             if score > 0:
                 scored.append((score, index))
 
-        # Rank pages, not chunks: a page's best chunk is its anchor. The chunk
-        # id stays stable even when the window later expands into neighbouring
-        # chunks on the same page.
-        best_by_page: dict[tuple[str, int], tuple[float, int]] = {}
+        # Rank chunks, not pages. Page/document grouping happens in the
+        # response layer; collapsing here would hide same-page evidence and
+        # make multi-channel votes impossible to accumulate.
+        ranked: list[tuple[float, int]] = []
         for score, index in scored:
             chunk = self.chunks[index]
-            key = (chunk.document_id, chunk.page)
             if self.profile is not None:
-                score += self.profile.page_prior(
+                prior = self.profile.page_prior(
                     query, self.page_text(chunk.document_id, chunk.page)
                 )
-            if key not in best_by_page or score > best_by_page[key][0]:
-                best_by_page[key] = (score, index)
+                if prior:
+                    # Scale-independent prior: the config value is alpha, not a
+                    # raw BM25 offset. A flat +18 becomes unstable as corpus
+                    # size/IDF changes.
+                    score *= 1.0 + prior
+            ranked.append((score, index))
 
-        ranked = sorted(
-            best_by_page.values(),
+        ranked.sort(
             key=lambda item: (
                 -item[0],
                 self.chunks[item[1]].document_id,
                 self.chunks[item[1]].page,
                 self.chunks[item[1]].index,
-            ),
+            )
         )
 
         hits: list[SearchHit] = []
@@ -244,8 +272,12 @@ class BM25Index:
                     line_start=window.line_start,
                     line_end=window.line_end,
                     text=window.text,
+                    anchor_start=chunk.line_start,
+                    anchor_end=chunk.line_end,
+                    anchor_text=chunk.text,
                     score=score,
                     matched_terms=matched,
+                    channels=(self.channel_name,),
                 )
             )
         return hits

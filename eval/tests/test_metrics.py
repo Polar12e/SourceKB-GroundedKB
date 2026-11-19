@@ -77,3 +77,31 @@ def test_hard_negative_does_not_count_as_hit() -> None:
 
     assert metrics.hit_at_k == 0.0
     assert metrics.hard_negative_hits == 1
+
+
+def test_chunk_hit_requires_anchor_overlap() -> None:
+    case = {
+        "case_id": "anchor",
+        "gold_evidence": [
+            {"document_id": "doc", "page": 1, "line_start": 5, "line_end": 6}
+        ],
+    }
+    wrong_chunk = SearchHit(
+        chunk_id="doc:p1:c0",
+        document_id="doc",
+        page=1,
+        line_start=1,
+        line_end=8,
+        anchor_start=1,
+        anchor_end=2,
+        text="context",
+        anchor_text="wrong",
+        score=1.0,
+    )
+
+    metrics = evaluate_case([wrong_chunk], case, top_k=4)
+
+    assert metrics.hit_at_k == 1.0
+    assert metrics.chunk_hit_at_k == 0.0
+    assert metrics.rank == 1
+    assert metrics.chunk_rank is None

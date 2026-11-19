@@ -21,13 +21,14 @@
 - 旧项目资产迁移清单；
 - 风险与里程碑；
 - Go 服务骨架（gateway / ingest / agent / model-gateway + `/healthz`）；
-- Python retrieval：BM25 + hit window + RRF + finance profile（`/search` 可用）；
+- Python retrieval：四通路 chunk 级 + anchor/channels + scale-independent prior（`/search` 可用）；
 - Retrieval 增强：metadata filters（company/year/doc_type/document_id）+ 简繁归一；
 - RAG 资产：财务名词表（terms.json）+ embedding provider（lsa/openai）+ dense channel + RAG notes；
 - 四通路通用化：bm25 / expanded / dense / hybrid，由 `config/retrieval.yaml` 驱动；
+- 证据级评测：SearchHit anchor/channels、chunk Hit/Recall/nDCG、指纹；prior 改为 α=0.3；
 - 10 文档本地语料：PDF parser + manifest + 页级 JSONL（美的/腾讯/中芯国际/小米）；
 - 10 题 retrieval eval：Hit@4=1.000 / Recall@4=0.975 / MRR=1.000，与旧 `bm25` 一致；
-- 跨文档 40 题 A/B：OCR 后 hybrid 0.875 / expanded 0.850，未达 3pp 门槛，默认保持 expanded；
+- 跨文档 40 题 A/B：chunk 级 + prior 后 expanded 0.875 / hybrid 0.850，默认保持 expanded；
 - 本地端到端切片：gateway /search + /ask → retrieval；agent 抽取式回答/拒答；
 - 契约 v0 草案（13 个 JSON Schema + OpenAPI）；
 - Compose / Dockerfile 骨架（`config` 校验通过，未在会话内运行）；
@@ -38,6 +39,7 @@
 - 契约 v0 评审与冻结；
 - ingest pipeline（数据库/索引服务）；
 - 40 题标注复核；
+- 规则 rerank / P0.3；完整数值 verifier 与拒答阈值；
 - LLM 生成、引用校验与完整拒答；
 - benchmark 扩展；
 - Web/API。

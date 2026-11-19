@@ -189,7 +189,7 @@ class TestFinanceProfile:
     def test_finance_profile_prefers_the_statement_page(self) -> None:
         pages = [
             Page("doc", 1, "合并及公司利润表\n营业收入 1"),
-            Page("doc", 2, "附注\n营业收入 1\n营业收入 2\n营业收入 3\n营业收入 4\n营业收入 5"),
+            Page("doc", 2, "附注\n营业收入 1\n营业成本 2"),
         ]
 
         generic = BM25Index.from_pages(pages)
@@ -218,3 +218,27 @@ class TestWindow:
 
         assert "b" in window.text
         assert "c" in window.text
+
+
+class TestChunkLevelHits:
+    def test_returns_multiple_chunks_from_the_same_page(self) -> None:
+        page = Page("doc", 1, "营业收入 1\n其他\n营业收入 2\n其他")
+        index = BM25Index.from_pages([page], size=2, overlap=0)
+
+        hits = index.search("营业收入", top_k=2)
+
+        assert len(hits) == 2
+        assert {hit.page for hit in hits} == {1}
+        assert len({hit.chunk_id for hit in hits}) == 2
+        assert all(hit.anchor_text and "营业收入" in hit.anchor_text for hit in hits)
+
+    def test_anchor_is_the_matched_chunk_not_the_window(self) -> None:
+        page = Page("doc", 1, "标题\n表头\n营业收入 1\n营业成本 2\n尾注")
+        hit = BM25Index.from_pages([page], size=2, overlap=0).search("营业收入", top_k=1)[0]
+
+        contract = hit.to_contract()
+
+        assert contract["anchor"]["line_start"] == hit.anchor_start
+        assert contract["anchor"]["line_end"] == hit.anchor_end
+        assert "标题" not in contract["anchor_text"]
+        assert "营业收入" in contract["anchor_text"]

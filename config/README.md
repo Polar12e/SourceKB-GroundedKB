@@ -17,7 +17,7 @@
 | | `builtin_expansions` | 固定 query 词到扩展词映射 |
 | | `statement_titles` | 报表页标题（页面加分） |
 | | `notes_markers` | 出现这些词时关闭页面加分 |
-| | `statement_bonus` | 报表页加分 |
+| | `statement_bonus` | 报表页乘法 prior α（`score *= 1+α`） |
 | `channels.<name>` | `profile` | expanded 使用的 profile |
 | | `provider`, `dim` | dense 的 provider/维度 |
 | | `model`, `base_url`, `api_key_env` | openai provider 的模型/端点/密钥环境变量 |
@@ -44,7 +44,7 @@ BM25 / expanded / dense / hybrid 四种通道的构建逻辑完全通用；`prof
 - `dense.dim` 必须为正；
 - 未知顶层字段拒绝。
 
-配置错误在启动阶段失败，不会静默回退。
+配置错误在启动阶段失败，不会静默回退。`statement_bonus` 现在是尺度无关的乘法 prior，不是 BM25 的固定加分。
 
 ## Dense provider
 

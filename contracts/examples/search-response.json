@@ -10,8 +10,21 @@
         "line_end": 18,
         "section": "财务报表附注"
       },
+      "anchor": {
+        "line_start": 1,
+        "line_end": 2
+      },
+      "anchor_text": "2023年营业成本重述说明\n因会计政策变更，营业成本调整为 2,928,031 千元。",
+      "channels": [
+        "bm25",
+        "expanded"
+      ],
       "score": 46.575,
-      "matched_terms": ["营业", "成本", "重述"]
+      "matched_terms": [
+        "营业",
+        "成本",
+        "重述"
+      ]
     }
   ]
 }

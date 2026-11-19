@@ -19,6 +19,7 @@ from workers.retrieval.corpus import load_pages_jsonl  # noqa: E402
 from workers.retrieval.documents import load_documents_manifest  # noqa: E402
 from workers.retrieval.filters import matches_filters  # noqa: E402
 from workers.retrieval.pipeline import build_channel  # noqa: E402
+from eval.fingerprint import fingerprint  # noqa: E402
 
 CHANNELS = ("bm25", "expanded", "dense", "hybrid")
 
@@ -31,6 +32,9 @@ def summarize(metrics: list) -> dict:
         "recall_at_k": sum(item.recall_at_k for item in metrics) / total,
         "mrr": sum(item.mrr for item in metrics) / total,
         "precision_at_k": sum(item.precision_at_k for item in metrics) / total,
+        "chunk_hit_at_k": sum(item.chunk_hit_at_k for item in metrics) / total,
+        "chunk_recall_at_k": sum(item.chunk_recall_at_k for item in metrics) / total,
+        "ndcg_at_10": sum(item.ndcg_at_10 for item in metrics) / total,
         "hard_negative_hits": sum(item.hard_negative_hits for item in metrics),
     }
 
@@ -69,6 +73,9 @@ def channel_overall(rows: list) -> dict:
         "recall_at_k": sum(group["recall_at_k"] * group["n"] for group in company_groups) / total,
         "mrr": sum(group["mrr"] * group["n"] for group in company_groups) / total,
         "precision_at_k": sum(group["precision_at_k"] * group["n"] for group in company_groups) / total,
+        "chunk_hit_at_k": sum(group["chunk_hit_at_k"] * group["n"] for group in company_groups) / total,
+        "chunk_recall_at_k": sum(group["chunk_recall_at_k"] * group["n"] for group in company_groups) / total,
+        "ndcg_at_10": sum(group["ndcg_at_10"] * group["n"] for group in company_groups) / total,
         "hard_negative_hits": sum(group["hard_negative_hits"] for group in company_groups),
     }
 
@@ -97,24 +104,29 @@ def main(argv: list[str] | None = None) -> int:
 
     companies = sorted({case["filters"]["company"] for case in cases if case.get("filters")})
     splits = sorted({case["split"] for case in cases})
+    fp = fingerprint(args.corpus, args.cases)
     lines = [
         "# Cross-document retrieval A/B",
         "",
         f"- cases: `{args.cases.name}` ({len(cases)})",
         f"- corpus: `{args.corpus}`",
         f"- top_k: {args.top_k}",
+        f"- corpus_sha256: `{fp['corpus_sha256']}`",
+        f"- config_sha256: `{fp['config_sha256']}`",
+        f"- git_rev: `{fp['git_rev']}`",
         "",
         "## Overall",
         "",
-        f"| channel | build s | Hit@{args.top_k} | Recall@{args.top_k} | MRR | precision@{args.top_k} | hard_neg | filters |",
-        "|---|---:|---:|---:|---:|---:|---:|---|",
+        f"| channel | build s | page Hit@{args.top_k} | chunk Hit@{args.top_k} | page Recall@{args.top_k} | chunk Recall@{args.top_k} | page MRR | chunk nDCG@10 | hard_neg | filters |",
+        "|---|---:|---:|---:|---:|---:|---:|---:|---:|---|",
     ]
     for row in rows:
         item = row["overall"]
         lines.append(
             f"| {row['channel']} | {row['build_seconds']:.2f} | {item['hit_at_k']:.3f} | "
-            f"{item['recall_at_k']:.3f} | {item['mrr']:.3f} | {item['precision_at_k']:.3f} | "
-            f"{item['hard_negative_hits']} | {'OK' if row['filter_ok'] else 'FAIL'} |"
+            f"{item['chunk_hit_at_k']:.3f} | {item['recall_at_k']:.3f} | {item['chunk_recall_at_k']:.3f} | "
+            f"{item['mrr']:.3f} | {item['ndcg_at_10']:.3f} | {item['hard_negative_hits']} | "
+            f"{'OK' if row['filter_ok'] else 'FAIL'} |"
         )
 
     for title, prefix, keys in (

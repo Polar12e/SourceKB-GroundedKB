@@ -134,16 +134,17 @@ grounded-kb/
 - [x] Go 服务框架：gateway / ingest / agent / model-gateway + `/healthz`
 - [x] Python retrieval：BM25 + hit window + filters + 简繁归一
 - [x] 四通路通用化：bm25 / expanded / dense / hybrid 由 config/retrieval.yaml 驱动
+- [x] 证据级评测：chunk anchor、channels、chunk Hit/Recall/nDCG、报告指纹
 - [x] Dense provider：lsa / openai（base_url/model/dim + env key + cache identity）
 - [x] RAG 资产：财务名词表（terms.json）/ LSA / OpenAI-compatible provider
 - [x] 本地端到端切片：gateway → agent → retrieval（抽取式回答 + 拒答兜底）
 - [x] Midea 10 题 benchmark：Hit@4=1.000 / Recall@4=0.975 / MRR=1.000
-- [x] 跨文档 40 题 A/B：OCR 后 hybrid 0.875 / expanded 0.850，未达 3pp 门槛，默认保持 expanded
+- [x] 跨文档 40 题 A/B：chunk 级 + 尺度无关 prior 后 expanded 0.875 / hybrid 0.850，默认保持 expanded
 - [x] 10 文档本地语料：PDF parser + manifest + 页级 JSONL
 - [x] 契约 v0 草案：13 个 JSON Schema + OpenAPI（待评审冻结）
 - [x] Compose + Dockerfile（`config` 校验通过；未在会话内运行）
 - [x] CI 骨架
-- [x] 84 个 Python 测试 + Go service/proxy/agent 测试
+- [x] 88 个 Python 测试 + Go service/proxy/agent 测试
 - [ ] 契约 v0 评审冻结
 - [x] Xiaomi 3 份 OCR：415/127/127 页，已合入 corpus，manifest=ocr
 - [ ] 第一个 ingest pipeline（数据库/索引服务）

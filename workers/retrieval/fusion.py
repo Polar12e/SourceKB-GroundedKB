@@ -24,9 +24,8 @@ class Channel(Protocol):
 class HybridIndex:
     """Fuse channels by rank instead of by incompatible raw scores.
 
-    ``weight`` encodes trust, not a calibrated score. With ``k=60`` a page ranked
-    #1 by a weight-0.5 channel contributes ``0.5/61``, which stays below the
-    primary channel's winner.
+    ``weight`` encodes trust, not a calibrated score. Hits are fused by
+    ``chunk_id``; ``channels`` records every channel that voted for a chunk.
     """
 
     def __init__(
@@ -55,8 +54,9 @@ class HybridIndex:
         if top_k <= 0 or not query.strip():
             return []
 
-        fused: dict[tuple[str, int], float] = {}
-        best: dict[tuple[str, int], tuple[float, SearchHit, str]] = {}
+        fused: dict[str, float] = {}
+        best: dict[str, tuple[float, SearchHit]] = {}
+        votes: dict[str, set[str]] = {}
 
         for name, channel, weight in self.channels:
             if weight <= 0:
@@ -67,19 +67,31 @@ class HybridIndex:
                 filters=filters,
             )
             for rank, hit in enumerate(hits, start=1):
-                key = (hit.document_id, hit.page)
+                key = hit.chunk_id
                 contribution = weight / (self.k + rank)
                 fused[key] = fused.get(key, 0.0) + contribution
                 current = best.get(key)
                 if current is None or contribution > current[0]:
-                    best[key] = (contribution, hit, name)
+                    best[key] = (contribution, hit)
+                votes.setdefault(key, set()).add(name)
 
         ordered = sorted(
             fused.items(),
-            key=lambda item: (-item[1], item[0][0], item[0][1]),
+            key=lambda item: (
+                -item[1],
+                best[item[0]][1].document_id,
+                best[item[0]][1].page,
+                item[0],
+            ),
         )
         results: list[SearchHit] = []
         for key, score in ordered[:top_k]:
-            _, hit, name = best[key]
-            results.append(replace(hit, score=score, channel=name))
+            _, hit = best[key]
+            results.append(
+                replace(
+                    hit,
+                    score=score,
+                    channels=tuple(sorted(votes.get(key, set()))),
+                )
+            )
         return results

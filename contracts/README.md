@@ -64,3 +64,11 @@ python scripts/check_contracts.py
 3. `SearchHit.text` 是否包含行号前缀（旧项目格式）；
 4. `Citation.quote` 与 locator 的精确匹配规则；
 5. 错误模型是否统一为 `{"error": {"code", "message"}}`。
+
+## SearchHit 证据字段
+
+- `anchor`：命中 chunk 的行区间（与展示 window 区分）；
+- `anchor_text`：chunk 原文，用于 verbatim citation；
+- `channels`：参与投票的通道列表。
+
+`Answer.status` 增加 `unverified` / `conflicting_evidence`。

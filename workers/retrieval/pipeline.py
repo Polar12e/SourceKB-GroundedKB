@@ -95,7 +95,12 @@ def build_channel(
             if profile_name
             else None
         )
-        return BM25Index.from_pages(pages, profile=profile, **common)
+        return BM25Index.from_pages(
+            pages,
+            profile=profile,
+            channel_name="expanded",
+            **common,
+        )
 
     if name == "dense":
         embedder = create_embedder(settings)

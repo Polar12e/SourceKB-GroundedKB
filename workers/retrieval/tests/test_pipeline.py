@@ -32,6 +32,7 @@ def test_expanded_channel_uses_the_configured_profile() -> None:
     assert isinstance(index, BM25Index)
     assert index.profile is not None
     assert "营业" in index.profile.expanded_terms("毛利率")
+    assert index.search("毛利率", top_k=1)[0].channels == ("expanded",)
 
 
 def test_create_embedder_dispatches_lsa() -> None:

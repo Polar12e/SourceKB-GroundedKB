@@ -37,11 +37,19 @@ class SearchRequest(BaseModel):
     top_k: int = Field(default=5, ge=1, le=50)
 
 
+class Anchor(BaseModel):
+    line_start: int = Field(ge=1)
+    line_end: int = Field(ge=1)
+
+
 class SearchHit(BaseModel):
     chunk_id: str
     document_id: str
     text: str
     locator: Locator
+    anchor: Anchor
+    anchor_text: str
+    channels: list[str] = Field(min_length=1)
     score: float
     matched_terms: list[str] = Field(default_factory=list)
 

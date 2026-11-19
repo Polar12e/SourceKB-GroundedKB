@@ -17,6 +17,7 @@ from workers.retrieval.config import load_config  # noqa: E402
 from workers.retrieval.corpus import load_pages_jsonl  # noqa: E402
 from workers.retrieval.documents import load_documents_manifest  # noqa: E402
 from workers.retrieval.pipeline import CHANNELS, build_channel  # noqa: E402
+from eval.fingerprint import fingerprint  # noqa: E402
 
 
 def run_channel(name: str, pages, documents, config, cases, top_k: int) -> dict:
@@ -42,6 +43,10 @@ def run_channel(name: str, pages, documents, config, cases, top_k: int) -> dict:
         "recall_at_k": sum(item.recall_at_k for item in results) / total,
         "mrr": sum(item.mrr for item in results) / total,
         "precision_at_k": sum(item.precision_at_k for item in results) / total,
+        "chunk_hit_at_k": sum(item.chunk_hit_at_k for item in results) / total,
+        "chunk_recall_at_k": sum(item.chunk_recall_at_k for item in results) / total,
+        "ndcg_at_10": sum(item.ndcg_at_10 for item in results) / total,
+        "hard_negative_hits": sum(item.hard_negative_hits for item in results),
     }
 
 
@@ -69,24 +74,29 @@ def main(argv: list[str] | None = None) -> int:
         parser.error(f"unknown channels: {', '.join(unknown)}")
 
     rows = [run_channel(name, pages, documents, config, cases, args.top_k) for name in requested]
+    fp = fingerprint(args.corpus, args.cases)
     lines = [
         "# Four-channel retrieval A/B",
         "",
         f"- cases: `{args.cases.name}` ({len(cases)})",
         f"- corpus: `{args.corpus}`",
         f"- top_k: {args.top_k}",
+        f"- corpus_sha256: `{fp['corpus_sha256']}`",
+        f"- config_sha256: `{fp['config_sha256']}`",
+        f"- git_rev: `{fp['git_rev']}`",
         "",
-        f"| channel | build s | Hit@{args.top_k} | Recall@{args.top_k} | MRR | precision@{args.top_k} |",
-        "|---|---:|---:|---:|---:|---:|",
+        f"| channel | build s | page Hit@{args.top_k} | chunk Hit@{args.top_k} | page Recall@{args.top_k} | chunk Recall@{args.top_k} | page MRR | chunk nDCG@10 | hard_neg |",
+        "|---|---:|---:|---:|---:|---:|---:|---:|---:|",
     ]
     for row in rows:
         if "error" in row:
-            lines.append(f"| {row['channel']} | {row['build_seconds']:.2f} | error | error | error | error |")
+            lines.append(f"| {row['channel']} | {row['build_seconds']:.2f} | error | error | error | error | error | error | error |")
             continue
         lines.append(
             f"| {row['channel']} | {row['build_seconds']:.2f} | "
-            f"{row['hit_at_k']:.3f} | {row['recall_at_k']:.3f} | "
-            f"{row['mrr']:.3f} | {row['precision_at_k']:.3f} |"
+            f"{row['hit_at_k']:.3f} | {row['chunk_hit_at_k']:.3f} | "
+            f"{row['recall_at_k']:.3f} | {row['chunk_recall_at_k']:.3f} | "
+            f"{row['mrr']:.3f} | {row['ndcg_at_10']:.3f} | {row['hard_negative_hits']} |"
         )
     lines.append("")
     args.out.parent.mkdir(parents=True, exist_ok=True)

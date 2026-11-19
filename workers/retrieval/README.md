@@ -3,12 +3,13 @@
 Python retrieval worker，负责四通路检索（`bm25` / `expanded` / `dense` / `hybrid`）、hit window 与 filters。T1.2 已从旧项目迁移：
 
 - **Chunking**：行感知切块、字符重叠、稳定 `chunk_id = document_id:p<page>:c<index>`；
-- **BM25**：数字归一化 + 中文 bigram，`k1=1.5`、`b=0.75`，按页聚合最佳 chunk；
+- **BM25**：数字归一化 + 中文 bigram，`k1=1.5`、`b=0.75`，chunk 级排序（页面分组后置）；
 - **简繁归一**：`zhconv` 将繁體转简体，腾讯/中芯港股文档可用简体 query 命中；
 - **Metadata filters**：`company` / `year` / `doc_type` / `document_id`，未知字段返回 400；
-- **Hit window**：从 chunk 的 page/line locator 向上下扩展 2 行，跨 chunk 边界；
-- **四通路**：`pipeline.py` 从 `config/retrieval.yaml` 构建 `bm25`、`expanded`、`dense`、`hybrid`；`hybrid` 用加权 RRF；
-- **Profile**：`profile.py` 读取 `profiles.finance`（模式、内置扩展、报表页加分）；名词表由 `domains/finance/terms.json` 提供；
+- **Hit window / anchor**：`locator`/`text` 是展示窗口；`anchor`/`anchor_text` 是命中 chunk 原文与行区间；
+- **Hit channels**：`channels` 累积所有命中通道，供 rerank/verifier 使用；
+- **四通路**：`pipeline.py` 从 `config/retrieval.yaml` 构建 `bm25`、`expanded`、`dense`、`hybrid`；`hybrid` 按 `chunk_id` 融合，页面分组后置；
+- **Profile**：`profile.py` 读取 `profiles.finance`（模式、内置扩展、报表页乘法 prior α）；名词表由 `domains/finance/terms.json` 提供；
 - **Embedding**：`workers/embedding/` 提供 LSA 与 OpenAI 兼容 provider；`pipeline.create_embedder` 按 `dense.provider: lsa|openai` 分发，openai 需要 `model/base_url/dim` 与 `api_key_env` 指定的环境变量。离线 LSA 实测弱于 BM25，默认不启用 dense。
 
 ## API
