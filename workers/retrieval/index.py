@@ -16,17 +16,21 @@ from .chunking import (
     tokenize,
 )
 from .documents import DocumentMeta
+from .filters import matches_filters, normalize_filters
 from .windows import WINDOW_MAX_CHARS, WINDOW_RADIUS, window_for_lines
 
 BM25_K1 = 1.5
 BM25_B = 0.75
-FILTER_FIELDS = frozenset({"document_id", "company", "year", "doc_type"})
 
 
 class QueryProfile(Protocol):
     """Domain hook for query expansion and page priors."""
 
-    def expanded_terms(self, query: str) -> dict[str, float]:
+    def expanded_terms(
+        self,
+        query: str,
+        coverage: float | None = None,
+    ) -> dict[str, float]:
         ...
 
     def page_prior(self, query: str, page_text: str) -> float:
@@ -130,46 +134,20 @@ class BM25Index:
     def page_text(self, document_id: str, page: int) -> str:
         return self.pages.get((document_id, page), "")
 
-    @staticmethod
-    def _normalize_filters(filters: Mapping[str, str] | None) -> dict[str, str]:
-        if not filters:
-            return {}
-        unknown = {str(key) for key in filters} - FILTER_FIELDS
-        if unknown:
-            raise ValueError(f"unknown filter fields: {', '.join(sorted(unknown))}")
-        normalized = {
-            str(key): str(value).strip()
-            for key, value in filters.items()
-            if str(value).strip()
-        }
-        year = normalized.get("year")
-        if year is not None and not year.isdigit():
-            raise ValueError("year filter must be an integer")
-        return normalized
+    def coverage(self, query: str) -> float:
+        """Share of query tokens that exist somewhere in the corpus."""
 
-    def _matches_filters(self, chunk: Chunk, filters: Mapping[str, str]) -> bool:
-        if not filters:
-            return True
-        if "document_id" in filters and chunk.document_id != filters["document_id"]:
-            return False
-        if set(filters) == {"document_id"}:
-            return True
-
-        document = self.documents.get(chunk.document_id)
-        if document is None:
-            return False
-        if "company" in filters and document.company.upper() != filters["company"].upper():
-            return False
-        if "year" in filters and str(document.year) != filters["year"]:
-            return False
-        if "doc_type" in filters and document.doc_type != filters["doc_type"]:
-            return False
-        return True
+        terms = set(tokenize(query))
+        if not terms:
+            return 0.0
+        return sum(1 for term in terms if term in self.idf) / len(terms)
 
     def weighted_terms(self, query: str) -> dict[str, float]:
         weights: dict[str, float] = {term: 1.0 for term in tokenize(query)}
         if self.profile is not None:
-            for term, weight in self.profile.expanded_terms(query).items():
+            for term, weight in self.profile.expanded_terms(
+                query, coverage=self.coverage(query)
+            ).items():
                 weights[term] = max(weights.get(term, 0.0), weight)
         return weights
 
@@ -182,7 +160,7 @@ class BM25Index:
         if top_k <= 0:
             return []
 
-        active_filters = self._normalize_filters(filters)
+        active_filters = normalize_filters(filters)
         if not query.strip() or not self.chunks:
             return []
 
@@ -193,7 +171,7 @@ class BM25Index:
         scored: list[tuple[float, int]] = []
         average_length = self.avg_length or 1.0
         for index, counts in enumerate(self.term_counts):
-            if not self._matches_filters(self.chunks[index], active_filters):
+            if not matches_filters(self.chunks[index].document_id, self.documents, active_filters):
                 continue
             score = 0.0
             for term, weight in weights.items():

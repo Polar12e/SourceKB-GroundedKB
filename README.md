@@ -105,7 +105,7 @@ grounded-kb/
 ├─ internal/                  # Go 共享平台包（config/health/httpserver/service）
 ├─ workers/                   # Python worker
 │  ├─ retrieval/              # BM25 + hit window + RRF
-│  ├─ embedding/              # 待建
+│  ├─ embedding/              # LSA / OpenAI-compatible
 │  ├─ parser/                 # PDF 解析 + 可选 OCR
 │  └─ eval/                   # 待建
 ├─ core/                      # 共享文本/切分（text.py 已落地）
@@ -130,6 +130,7 @@ grounded-kb/
 - [x] Go 服务骨架：gateway / ingest / agent / model-gateway + `/healthz`
 - [x] Python retrieval：BM25 + hit window + RRF + finance profile
 - [x] Retrieval 增强：metadata filters（company/year/doc_type/document_id）+ 简繁归一
+- [x] RAG 资产：完整 finance lexicon / embedding provider / dense channel + RAG notes
 - [x] 10 文档本地语料：PDF parser + manifest + 页级 JSONL
 - [x] 契约 v0 草案：13 个 JSON Schema + OpenAPI（待评审冻结）
 - [x] Compose + Dockerfile 骨架（`config` 校验通过；未在会话内运行）
@@ -230,6 +231,7 @@ make eval
 | [HANDOVER.md](HANDOVER.md) | 交接状态、决策、风险、里程碑 |
 | [docs/task-log.md](docs/task-log.md) | 任务 backlog、会话记录、偏差与决策 |
 | [docs/architecture.md](docs/architecture.md) | 服务边界、契约、数据流 |
+| [docs/rag-notes.md](docs/rag-notes.md) | 旧项目 RAG 实验笔记与检索取舍 |
 | [contracts/README.md](contracts/README.md) | 契约 v0、字段约定、校验方式 |
 | [data/README.md](data/README.md) | 语料 manifest 与私有数据约定 |
 | [deploy/README.md](deploy/README.md) | Compose、Dockerfile、端口 |

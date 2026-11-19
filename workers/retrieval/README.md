@@ -7,8 +7,9 @@ Python retrieval worker，负责 BM25 / hit window / RRF / filters。T1.2 已从
 - **简繁归一**：`zhconv` 将繁體转简体，腾讯/中芯港股文档可用简体 query 命中；
 - **Metadata filters**：`company` / `year` / `doc_type` / `document_id`，未知字段返回 400；
 - **Hit window**：从 chunk 的 page/line locator 向上下扩展 2 行，跨 chunk 边界；
-- **RRF**：`fusion.py` 提供加权 reciprocal-rank fusion（当前 API 只启用 BM25 单通道）；
-- **Finance profile**：`domains/finance/retrieval.py` 保留旧 `bm25` 的 ratio/restatement 扩展和报表页 +18 加分。
+- **RRF**：`fusion.py` 提供加权 reciprocal-rank fusion；`dense.py` 提供 DenseIndex，可与 BM25 组合（API 当前仍默认 BM25 单通道）；
+- **Finance profile**：`domains/finance/retrieval.py` 保留旧 `bm25` 的 ratio/restatement 扩展和报表页 +18 加分；`lexicon.py` 提供完整口语概念表，`RETRIEVAL_EXPANSION=none|builtin|lexicon|auto` 可切换；
+- **Embedding**：`workers/embedding/` 提供 LSA 与 OpenAI 兼容 provider；离线 LSA 实测弱于 BM25，默认不启用 dense。
 
 ## API
 

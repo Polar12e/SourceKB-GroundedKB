@@ -53,8 +53,9 @@ class SearchResponse(BaseModel):
 
 def _default_index() -> BM25Index:
     corpus = os.getenv("RETRIEVAL_CORPUS")
+    profile = FinanceRetrievalProfile(os.getenv("RETRIEVAL_EXPANSION", "builtin"))
     if not corpus:
-        return BM25Index.from_pages([], profile=FinanceRetrievalProfile())
+        return BM25Index.from_pages([], profile=profile)
 
     manifest = Path(
         os.getenv("RETRIEVAL_MANIFEST", "data/manifests/documents.json")
@@ -62,7 +63,7 @@ def _default_index() -> BM25Index:
     documents = load_documents_manifest(manifest) if manifest.exists() else None
     return BM25Index.from_pages(
         load_pages_jsonl(Path(corpus)),
-        profile=FinanceRetrievalProfile(),
+        profile=profile,
         documents=documents,
     )
 

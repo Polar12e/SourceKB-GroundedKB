@@ -13,6 +13,8 @@ from __future__ import annotations
 
 from core.text import normalize, tokenize
 
+from .lexicon import expand_terms
+
 QUERY_EXPANSIONS: dict[str, tuple[str, ...]] = {
     "毛利率": ("营业收入", "营业成本"),
     "资产负债率": ("负债合计", "资产总计"),
@@ -33,12 +35,32 @@ STATEMENT_TITLES = (
 )
 STATEMENT_BONUS = 18.0
 NOTES_MARKERS = ("为什么", "重述", "重分类", "影响", "附注", "会计政策", "调整")
+EXPANSION_MODES = ("none", "builtin", "lexicon", "auto")
+OOV_EXPANSION_THRESHOLD = 0.5
 
 
 class FinanceRetrievalProfile:
-    """Query expansion and statement-page prior for annual reports."""
+    """Query expansion and statement-page prior for annual reports.
 
-    def expanded_terms(self, query: str) -> dict[str, float]:
+    ``builtin`` keeps the ratio/restatement expansion used by the legacy
+    ``bm25`` baseline. ``lexicon`` adds the full colloquial concept table;
+    ``auto`` only adds it when query coverage is below
+    ``OOV_EXPANSION_THRESHOLD``. Lexicon terms are down-weighted.
+    """
+
+    def __init__(self, mode: str = "builtin") -> None:
+        if mode not in EXPANSION_MODES:
+            raise ValueError(f"mode must be one of {EXPANSION_MODES}")
+        self.mode = mode
+
+    def expanded_terms(
+        self,
+        query: str,
+        coverage: float | None = None,
+    ) -> dict[str, float]:
+        if self.mode == "none":
+            return {}
+
         query = normalize(query)
         weights: dict[str, float] = {}
         for key, terms in QUERY_EXPANSIONS.items():
@@ -47,6 +69,16 @@ class FinanceRetrievalProfile:
             for term in terms:
                 for token in tokenize(term):
                     weights.setdefault(token, 1.0)
+
+        rewrite = self.mode == "lexicon" or (
+            self.mode == "auto"
+            and coverage is not None
+            and coverage < OOV_EXPANSION_THRESHOLD
+        )
+        if rewrite:
+            for term, weight in expand_terms(query):
+                for token in tokenize(term):
+                    weights[token] = max(weights.get(token, 0.0), weight)
         return weights
 
     def page_prior(self, query: str, page_text: str) -> float:
