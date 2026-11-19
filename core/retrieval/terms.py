@@ -20,7 +20,6 @@ _CJK_RUN = re.compile(r"[\u4e00-\u9fff]+")
 class TermTable:
     name: str
     groups: tuple[tuple[str, ...], ...]
-    weight: float
 
 
 def load_term_table(path: str | Path) -> TermTable:
@@ -36,13 +35,9 @@ def load_term_table(path: str | Path) -> TermTable:
             raise ValueError(f"{path}: each group needs at least two terms")
         if any(len(term) < 2 for term in group):
             raise ValueError(f"{path}: single-character term is too broad")
-    weight = float(payload.get("expansion_weight", 0.45))
-    if not 0 < weight < 1:
-        raise ValueError(f"{path}: expansion_weight must be between 0 and 1")
     return TermTable(
         name=str(payload.get("name", "term-table")),
         groups=groups,
-        weight=weight,
     )
 
 
@@ -68,8 +63,12 @@ def terms_for(text: str, table: TermTable) -> tuple[str, ...]:
     return tuple(dict.fromkeys(matched))
 
 
-def expand_terms(query: str, table: TermTable) -> list[tuple[str, float]]:
-    return [(term, table.weight) for term in terms_for(query, table)]
+def expand_terms(
+    query: str,
+    table: TermTable,
+    weight: float = 0.45,
+) -> list[tuple[str, float]]:
+    return [(term, weight) for term in terms_for(query, table)]
 
 
 __all__ = ["TermTable", "expand_terms", "load_term_table", "terms_for"]

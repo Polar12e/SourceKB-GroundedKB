@@ -21,8 +21,10 @@ def test_terms_already_present_are_not_repeated() -> None:
     assert "存货" not in terms_for("存货有多少", TABLE)
 
 
-def test_rewrite_weight_is_below_full_weight() -> None:
-    assert 0 < TABLE.weight < 1
+def test_rewrite_weight_comes_from_profile_config() -> None:
+    from workers.retrieval.config import load_config
+    weight = load_config()["profiles"]["finance"]["expansion_weight"]
+    assert 0 < weight < 1
 
 
 def test_term_groups_are_not_single_characters() -> None:

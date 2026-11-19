@@ -23,6 +23,14 @@ python -m eval.run_retrieval
 
 这些输出在 `.gitignore` 中，不提交。
 
+## 四通路 A/B
+
+```bash
+make eval-ab
+```
+
+默认对比 `bm25` / `expanded` / `dense` / `hybrid`，报告见 [reports/channels_midea_v1.md](reports/channels_midea_v1.md)。当前结论：默认 `expanded`；LSA dense 不优于纯 BM25，hybrid 暂不默认。
+
 ## 指标
 
 - Hit@4：top-4 是否命中任一 gold page

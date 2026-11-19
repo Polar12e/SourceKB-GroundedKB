@@ -30,3 +30,25 @@
 - 财务参数：直接改 `profiles.finance` 或替换 `domains/finance/terms.json`。
 
 BM25 / expanded / dense / hybrid 四种通道的构建逻辑完全通用；`profiles.finance` 只是当前 vertical 的参数。
+
+## 校验
+
+`load_config()` 启动时用 Pydantic 校验：
+
+- `default_channel` 必须存在；
+- 未知通道、未知 hybrid 子通道、非法权重/阈值直接报错；
+- `expanded.profile` 必须存在；
+- `term_table` 路径必须存在；
+- `dense.dim` 必须为正；
+- 未知顶层字段拒绝。
+
+配置错误在启动阶段失败，不会静默回退。
+
+## 当前评估
+
+```bash
+make eval-ab
+```
+
+报告：[eval/reports/channels_midea_v1.md](../eval/reports/channels_midea_v1.md)。当前默认保持 `expanded`；LSA dense 与 hybrid 尚未证明优于 expanded。
+

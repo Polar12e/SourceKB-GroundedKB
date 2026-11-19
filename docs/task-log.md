@@ -317,6 +317,29 @@
 
 - dense 端到端质量（LSA 仍弱于 BM25）；跨文档题；Xiaomi OCR；DB ingest。
 
+### 2026-11-19 15:44 · 四通路评估与配置校验
+
+**补评估项（方案 A）**
+
+- `workers/retrieval/config.py` 改为 Pydantic 校验：默认通道、profile 引用、hybrid 子通道、term_table 路径、权重/阈值、未知字段。
+- 名词表只保留 groups；扩展权重唯一来源改为 `profiles.finance.expansion_weight`。
+- 新增 `eval/run_ab.py` + `make eval-ab`；报告 `eval/reports/channels_midea_v1.md`。
+
+**A/B 结果（Midea 10 题，top-4）**
+
+| 通道 | Hit@4 | Recall@4 | MRR |
+|---|---:|---:|---:|
+| bm25 | 0.600 | 0.550 | 0.475 |
+| **expanded** | **1.000** | **0.975** | **1.000** |
+| dense（LSA） | 0.600 | 0.600 | 0.533 |
+| hybrid | 1.000 | 0.950 | 0.883 |
+
+**决策**
+
+- 默认保持 `expanded`；不因四通路“可切换”就切 dense/hybrid。
+- dense 待真实 embedding provider 后再评估；hybrid 的 RRF 权重后续再调。
+- 72 个 Python 测试通过。
+
 ---
 
 ## 2. 工作区清单（已读）
@@ -401,7 +424,8 @@
 | T1.7 | 新服务 10 题 retrieval eval，与 T1.3 baseline 对比 | `DONE` | 新服务 Hit@4=1.000 / Recall@4=0.975 / MRR=1.000，与旧 baseline 一致（Midea） |
 | T1.8 | Retrieval 增强：metadata filters + 简繁归一 | `DONE` | company/year/doc_type/document_id 过滤；zhconv；43 tests |
 | T1.9 | 迁移 RAG 资产：完整 lexicon / embedding / dense / rag-notes | `DONE` | 63 tests；dense 可用但默认关闭（LSA 弱于 BM25） |
-| T1.10 | 四通路通用化：bm25/expanded/dense/hybrid + 配置驱动 | `DONE` | `config/retrieval.yaml` + pipeline/profile；filters；四通路实测 |
+| T1.10 | 四通路通用化：bm25/expanded/dense/hybrid + 配置驱动 | `DONE` | `config/retrieval.yaml` + Pydantic 校验；A/B：expanded 1.000/0.975/1.000 最优 |
+| T1.11 | 四通路 A/B 评估报告 | `DONE` | `eval/reports/channels_midea_v1.md`；默认保持 expanded |
 
 ### M2：Agent + 引用
 
@@ -444,7 +468,7 @@
 | 里程碑 | 验收标准 | 状态 | 主要依赖 |
 |---|---|---|---|
 | M0 契约与骨架 | `docker compose up` 可启动；`/healthz` 可用 | 进行中 | T0.5、T0.8；D3 沙箱 |
-| M1 检索切片 | 10 文档/10 题；Hit@4、Recall@4 baseline；页面/行号可回链 | 进行中 | 10 文档 + Midea 10 题 + filters/简繁 + 四通路配置化已完成；跨文档题/Xiaomi OCR/DB ingest 未完成 |
+| M1 检索切片 | 10 文档/10 题；Hit@4、Recall@4 baseline；页面/行号可回链 | 进行中 | 10 文档 + Midea 10 题 + filters/简繁 + 四通路 A/B 已完成；跨文档题/Xiaomi OCR/DB ingest 未完成 |
 | M2 Agent + 引用 | 10–20 题端到端；引用可核对；无证据拒答 | 未开始 | M1；T2.1–T2.6 |
 | M3 100 文档/100 题 | 100 题 Gold Evidence；四种方案对比报告 | 未开始 | M2；T3.1–T3.4 |
 | M4 平台化 | 异步 ingest、索引重建、观测、基础 Web | 未开始 | M3 |

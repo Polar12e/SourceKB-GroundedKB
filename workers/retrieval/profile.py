@@ -33,7 +33,7 @@ class ConfiguredProfile:
                 path = Path(__file__).resolve().parents[2] / path
             self.term_table = load_term_table(path)
 
-        fallback_weight = self.term_table.weight if self.term_table else 0.45
+        fallback_weight = 0.45
         self.expansion_weight = float(settings.get("expansion_weight", fallback_weight))
         if not 0 < self.expansion_weight < 1:
             raise ValueError("expansion_weight must be between 0 and 1")

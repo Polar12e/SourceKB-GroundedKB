@@ -4,7 +4,7 @@
 
 ## 当前配置
 
-- [`terms.json`](terms.json)：**财务名词配置**（同组名词视为同义/近义，`expansion_weight=0.45`）；
+- [`terms.json`](terms.json)：**财务名词配置**（同组名词视为同义/近义；权重由 `config/retrieval.yaml` 提供）；
 - [`config/retrieval.yaml`](../../config/retrieval.yaml) 的 `profiles.finance`：查询模式、内置扩展、报表页标题/加分等参数；
 - 名词表转换逻辑在 [`core/retrieval/terms.py`](../../core/retrieval/terms.py)，profile 在 [`workers/retrieval/profile.py`](../../workers/retrieval/profile.py)，四通路构建在 [`workers/retrieval/pipeline.py`](../../workers/retrieval/pipeline.py)。
 
@@ -16,7 +16,6 @@
 
 ```json
 {
-  "expansion_weight": 0.45,
   "groups": [
     ["存货", "库存", "库存商品", "仓库", "备货", "积压", "压货", "卖不掉"],
     ["营业收入", "营收", "收入", "销售额"]
