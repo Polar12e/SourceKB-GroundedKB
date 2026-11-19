@@ -1,9 +1,9 @@
 # 高保真知识库（GroundedKB）
 
-> **可溯源的 Agentic RAG 知识库平台**  
-> 技术栈：Go + Python  
-> 状态：M1 检索切片 / 本地可运行（2026-11-19）  
-> 已打通 **Gateway → Agent → Retrieval** 本地端到端切片；ingest、Web UI、LLM 生成仍在后续。
+> **可溯源的 Agentic RAG 知识库平台**
+> 技术栈：Go + Python
+> 状态：M1 检索切片 / 本地可运行 / LLM 可接入（2026-11-19）
+> 已打通 **Gateway → Agent → Retrieval → DeepSeek** 的本地链路；ingest、Web UI、LLM 质量评测仍在后续。
 
 ---
 
@@ -105,7 +105,7 @@ grounded-kb/
 │  ├─ gateway/                # /healthz + /search + /ask 代理
 │  ├─ ingest/                 # 健康检查骨架
 │  ├─ agent/                  # /ask 抽取式回答
-│  └─ model-gateway/          # /v1/chat/completions（DeepSeek 准备）
+│  └─ model-gateway/          # /v1/chat/completions（DeepSeek）
 ├─ internal/                  # Go 共享包：config/health/httpserver/service/proxy/agent
 ├─ workers/                   # Python worker
 │  ├─ retrieval/              # 四通路：bm25/expanded/dense/hybrid
@@ -118,10 +118,10 @@ grounded-kb/
 ├─ deploy/                    # Compose + Dockerfile
 │  ├─ compose.yaml
 │  └─ docker/go-service.Dockerfile
-└─ tests/                     # 跨服务测试（待建）
+└─ tests/e2e/                 # 黑盒系统测试
 ```
 
-当前可运行的是：Python retrieval（四通路 + filters + 简繁）、Go gateway/agent 本地切片、10 文档语料、Midea 10 题与跨文档 40 题评测。ingest 上传/索引、model gateway 业务、Web UI、LLM 生成仍是后续。
+当前可运行的是：Python retrieval（四通路 + filters + 简繁）、Go gateway/agent/model-gateway 本地切片、10 文档语料、Midea 10 题与跨文档 40 题评测，以及默认关闭的 DeepSeek 回答路径。ingest 上传/索引、Web UI、LLM 质量评测仍是后续。
 
 ---
 
@@ -137,7 +137,7 @@ grounded-kb/
 - [x] 证据级评测：chunk anchor、channels、chunk Hit/Recall/nDCG、报告指纹
 - [x] Dense provider：lsa / openai（base_url/model/dim + env key + cache identity）
 - [x] RAG 资产：财务名词表（terms.json）/ LSA / OpenAI-compatible provider
-- [x] 本地端到端切片：gateway → agent → retrieval（抽取式回答 + 拒答兜底）
+- [x] 本地端到端切片：gateway → agent → retrieval（默认抽取式 + 拒答兜底）
 - [x] Midea 10 题 benchmark：Hit@4=1.000 / Recall@4=0.975 / MRR=1.000
 - [x] 跨文档 40 题 A/B：chunk 级 + 尺度无关 prior 后 expanded 0.875 / hybrid 0.850，默认保持 expanded
 - [x] 10 文档本地语料：PDF parser + manifest + 页级 JSONL
@@ -146,11 +146,13 @@ grounded-kb/
 - [x] CI 骨架
 - [x] 88 个 Python 测试 + Go service/proxy/agent 测试
 - [x] 14 条黑盒系统测试：retrieval/agent/gateway/model-gateway + 错误契约
-- [x] LLM 路径：DeepSeek `deepseek-chat` 路由 + Agent 调用/校验/fallback（默认关闭，抽取式警告）
+- [x] LLM 路径：DeepSeek `deepseek-chat` + Agent 调用/校验/fallback（默认关闭，抽取式警告）
+- [x] DeepSeek live probe：HTTP 200，真实 `/ask` 返回 ok + citation
 - [ ] 契约 v0 评审冻结
 - [x] Xiaomi 3 份 OCR：415/127/127 页，已合入 corpus，manifest=ocr
 - [ ] 第一个 ingest pipeline（数据库/索引服务）
-- [ ] LLM 生成、引用校验与完整拒答策略（当前仅抽取式基线）
+- [ ] LLM 质量评测、严格 verifier 与完整拒答策略
+- [ ] 默认开启 LLM（当前 `LLM_ENABLED=false`）
 - [ ] 40 题 `acceptable_evidence` / `hard_negatives` 人工复核
 - [ ] Web UI（HTTP API 基础已可用）
 
@@ -175,7 +177,7 @@ make run-local
 |---|---:|---|
 | gateway | 8080 | `/healthz`、`/search`、`/ask` |
 | retrieval | 8081 | FastAPI `/search` |
-| agent | 8083 | 抽取式 `/ask`，带基线警告 |
+| agent | 8083 | `/ask`；默认抽取式 + 警告，LLM 开启后走 DeepSeek |
 | model-gateway | 8084 | DeepSeek `/v1/chat/completions`（默认关闭） |
 
 另开终端验证：
@@ -192,7 +194,27 @@ curl -X POST http://127.0.0.1:8080/ask \
   -d '{"question":"2023年营业成本为什么重述？","top_k":3}'
 ```
 
-`/ask` 当前默认仍是**确定性抽取式基线**，回答会先提示“当前为抽取式基线，尚未接入 LLM 生成”。model-gateway 已准备 DeepSeek `deepseek-chat` 路由；在 `.env` 设置 `LLM_ENABLED=true` 并提供 `DEEPSEEK_API_KEY` 后，Agent 会调用 model-gateway，校验失败则回退抽取式。
+`/ask` 有两种模式：
+
+- **默认**：抽取式回答，前缀“当前为抽取式基线，尚未接入 LLM 生成”；
+- **LLM 模式**：DeepSeek `deepseek-chat` 生成答案，citation 仍需通过 anchor/数字校验；调用失败或校验不通过则回退抽取式，并提示回退原因。
+
+### 6.1.1 启用 LLM（可选）
+
+```bash
+# .env（不要提交）
+LLM_ENABLED=true
+LLM_MODEL=deepseek-chat
+DEEPSEEK_API_KEY=<your-key>
+```
+
+`make run-local` 会自动加载 `.env`，但不打印 key。启用后 `/ask` 走：
+
+```text
+agent → model-gateway → DeepSeek → verifier
+```
+
+如果 `LLM_ENABLED=false` 或 key 缺失，仍返回抽取式回答，不影响检索和评测。
 
 默认读取 `data/private/corpus/pages.jsonl`；如果没有 corpus，脚本会警告，`/search` 返回空、`/ask` 拒答。详细数据约定见 [data/README.md](data/README.md)。
 
@@ -204,12 +226,12 @@ make vet
 make build
 
 make run-gateway         # :8080
-make run-agent           # :8083
+make run-agent           # :8083（LLM_ENABLED=false 时抽取式）
 make run-ingest          # :8082（健康检查骨架）
 make run-model-gateway   # :8084（DeepSeek 路由，默认关闭）
 ```
 
-注意：单独启动 gateway 时，`/search` 需要 retrieval 可达，`/ask` 需要 agent + retrieval 可达；否则返回 502。
+注意：单独启动 gateway 时，`/search` 需要 retrieval 可达，`/ask` 需要 agent + retrieval 可达；启用 LLM 时还需要 model-gateway 可达；否则返回 502。
 
 ### 6.3 Python retrieval
 
@@ -247,7 +269,7 @@ make eval          # Midea 10 题
 make eval-ab       # Midea 四通路 A/B
 make eval-crossdoc # 跨文档 40 题，按 company/split 分组
 make check-all     # Go + Python + contracts + compose config
-make test-system   # 12 条黑盒系统测试（fixture）
+make test-system   # 14 条黑盒系统测试（fixture）
 ```
 
 Midea baseline：**Hit@4=1.000 / Recall@4=0.975 / MRR=1.000**。跨文档结论与失败分析见 [eval/reports/channels_crossdoc_v1.md](eval/reports/channels_crossdoc_v1.md)。
@@ -276,6 +298,7 @@ Midea baseline：**Hit@4=1.000 / Recall@4=0.975 / MRR=1.000**。跨文档结论�
 | [deploy/README.md](deploy/README.md) | Compose、Dockerfile、端口 |
 | [eval/README.md](eval/README.md) | 评测集、合法答案页标准、四通路结果 |
 | [services/README.md](services/README.md) | Go 服务职责与当前状态 |
+| [tests/e2e/README.md](tests/e2e/README.md) | 黑盒系统测试集与运行方式 |
 | [docs/migration-from-annual-report.md](docs/migration-from-annual-report.md) | 从旧年报项目迁移哪些资产 |
 
 ---
