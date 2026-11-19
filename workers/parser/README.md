@@ -25,7 +25,7 @@ python -m workers.parser.extract_pdf \
 
 ## 质量标记
 
-`--text-quality low` 用于字体编码损坏/扫描件。当前小米 3 份 PDF 的中文文本层为乱码，已标记 `low`；需要 OCR 后再重新抽取。
+`--text-quality low` 用于字体编码损坏/扫描件。小米 3 份已完成 OCR（415/127/127 页），合入 `pages.jsonl` 后 manifest 标记 `text_quality=ocr`；原始低质量输出备份在 `data/private/corpus/pre-ocr/`。
 
 ## OCR（可选）
 

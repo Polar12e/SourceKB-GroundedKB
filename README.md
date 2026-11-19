@@ -138,14 +138,14 @@ grounded-kb/
 - [x] RAG 资产：财务名词表（terms.json）/ LSA / OpenAI-compatible provider
 - [x] 本地端到端切片：gateway → agent → retrieval（抽取式回答 + 拒答兜底）
 - [x] Midea 10 题 benchmark：Hit@4=1.000 / Recall@4=0.975 / MRR=1.000
-- [x] 跨文档 40 题 A/B：标注修正后 hybrid 与 expanded 持平，默认保持 expanded
+- [x] 跨文档 40 题 A/B：OCR 后 hybrid 0.875 / expanded 0.850，未达 3pp 门槛，默认保持 expanded
 - [x] 10 文档本地语料：PDF parser + manifest + 页级 JSONL
 - [x] 契约 v0 草案：13 个 JSON Schema + OpenAPI（待评审冻结）
 - [x] Compose + Dockerfile（`config` 校验通过；未在会话内运行）
 - [x] CI 骨架
 - [x] 84 个 Python 测试 + Go service/proxy/agent 测试
 - [ ] 契约 v0 评审冻结
-- [ ] Xiaomi 3 份 OCR 重抽取
+- [x] Xiaomi 3 份 OCR：415/127/127 页，已合入 corpus，manifest=ocr
 - [ ] 第一个 ingest pipeline（数据库/索引服务）
 - [ ] LLM 生成、引用校验与完整拒答策略（当前仅抽取式基线）
 - [ ] 40 题 `acceptable_evidence` / `hard_negatives` 人工复核

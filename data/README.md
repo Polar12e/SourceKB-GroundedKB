@@ -12,7 +12,7 @@
 
 当前 10 份文档：美的 2024、腾讯 2025/2025H1/2026H1、中芯国际 2023/2024/2025、小米 2025/2025H1/2026H1。
 
-> 小米 3 份文本层字体编码乱码，当前 OCR 输出为 partial，未合入 `pages.jsonl`；manifest 标记 `text_quality=low`，需按下面的 OCR 命令离线重跑后再替换。
+> 小米 3 份已完成 OCR（415/127/127 页），并合入 `pages.jsonl`；manifest 标记 `text_quality=ocr`。原低质量输出备份在 `private/corpus/pre-ocr/`，不提交。
 
 ## 重建
 

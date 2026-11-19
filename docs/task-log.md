@@ -450,6 +450,32 @@
 - 无 LLM 生成；当前是抽取式基线。
 - ingest 上传/索引、model gateway 业务、auth/rate limit/trace 未实现。
 
+### 2026-11-19 17:22 · Xiaomi OCR 完成与语料替换
+
+**OCR**
+
+- RapidOCR 150 DPI，三份并行续跑；`nice` + 每进程 4 线程。
+- 结果：`xiaomi-2025` 415 页、`xiaomi-2025h1` 127 页、`xiaomi-2026h1` 127 页，共 669 页；无缺页/重复页。
+- 空页：2/1/1（封面等），保留空文本。
+- 耗时约 21 分钟（大文件 1254s）。
+
+**合入**
+
+- 替换 `data/private/corpus/pages.jsonl` 中 669 页；总页数仍 2201。
+- 同步替换 `xiaomi-*.jsonl`；原低质量页备份到 `data/private/corpus/pre-ocr/`（不提交）。
+- manifest：3 份 Xiaomi `text_quality=ocr`，`text_chars` 更新为 269873 / 79164 / 79695；契约校验通过。
+- 小米检索抽样：年收入/毛利率可命中 p20/p24；汽车/研发 query 仍有 OCR 噪声和错页，尚未做 Xiaomi 题集。
+
+**复评**
+
+- OCR 合入改变 IDF：跨文档 `expanded` 0.875 → 0.850，`hybrid` 保持 0.875（+2.5pp，未达 3pp 门槛）。
+- `dense` 0.700；hybrid 无 company 回退；默认仍为 `expanded`。
+- 报告：`eval/reports/channels_crossdoc_v1.md`。
+
+**未做**
+
+- OCR 逐字校对；Xiaomi 评测题；ingest/DB。
+
 ---
 
 ## 2. 工作区清单（已读）
@@ -492,7 +518,7 @@
 | D8 | 契约 v0 已起草但未评审冻结 | 字段/端点仍可能变，先扩业务会返工 | T0.5：记录评审意见后冻结 v0 |
 | D9 | 已解决（18:42）：`/search` 返回 BM25 hits；q01–q08 页面顺序与旧 `bm25` 一致 | — | dense 通道见 D10 |
 | D10 | dense / embedding 通道未迁移；API 目前只用 BM25 单通道 | hybrid 与语义召回不可用 | `workers/embedding` 建立后接入 `HybridIndex` |
-| D11 | 小米 3 份 PDF 文本层乱码；完整 OCR 未完成 | 小米中文检索不可用；10 文档中 3 份质量低 | 用 `workers/parser/ocr_pdf.py` 离线重跑（RapidOCR） |
+| D11 | 已解决（17:22）：小米 3 份 OCR 415/127/127 页，已合入 corpus，manifest `text_quality=ocr` | 小米中文检索可用；仍有 OCR 噪声 | 后续按 Xiaomi 题集评估，不做逐字校对 |
 
 ---
 
@@ -540,6 +566,7 @@
 | T1.13 | Dense provider 分发 + OpenAI 配置校验 | `DONE` | `create_embedder`；channels 配置；缓存 identity；82 tests |
 | T1.14 | 合法答案页标注 + 跨文档复评 | `DONE` | 15 acceptable / 9 hard_negatives；hybrid 腾讯回退消失；默认不变 |
 | T1.15 | 本地端到端切片：gateway → agent → retrieval | `DONE` | `/search` `/ask` 代理；抽取式回答/拒答；`make run-local` |
+| T1.16 | Xiaomi 3 份 OCR 并合入 corpus | `DONE` | 415/127/127 页；manifest=ocr；跨文档复评 |
 
 ### M2：Agent + 引用
 
@@ -582,7 +609,7 @@
 | 里程碑 | 验收标准 | 状态 | 主要依赖 |
 |---|---|---|---|
 | M0 契约与骨架 | `docker compose up` 可启动；`/healthz` 可用 | 进行中 | T0.5、T0.8；D3 沙箱 |
-| M1 检索切片 | 10 文档/10 题；Hit@4、Recall@4 baseline；页面/行号可回链 | 进行中 | 10 文档、Midea 10 题、跨文档 40 题、本地端到端已跑通；标注复核/Xiaomi OCR/DB ingest 未完成 |
+| M1 检索切片 | 10 文档/10 题；Hit@4、Recall@4 baseline；页面/行号可回链 | 进行中 | 10 文档、Midea 10 题、跨文档 40 题、本地端到端、Xiaomi OCR 已跑通；标注复核/DB ingest 未完成 |
 | M2 Agent + 引用 | 10–20 题端到端；引用可核对；无证据拒答 | 未开始 | M1；T2.1–T2.6 |
 | M3 100 文档/100 题 | 100 题 Gold Evidence；四种方案对比报告 | 未开始 | M2；T3.1–T3.4 |
 | M4 平台化 | 异步 ingest、索引重建、观测、基础 Web | 未开始 | M3 |
@@ -633,7 +660,7 @@
 1. **确认 Docker 访问**：在宿主机终端执行 `docker info`、`docker run --rm hello-world`，再跑 `docker compose -f deploy/compose.yaml up --build`；这是 M0 唯一环境阻塞（D3/T0.8）。
 2. **评审并冻结契约 v0**（T0.5）：按 `contracts/README.md` 的待评审问题逐项确认，记录评审意见后冻结（D8）。
 3. **补跨文档 10 题**：腾讯/中芯各 2–3 题，小米 OCR 后 1–2 题；复用 `eval/run_retrieval.py` 和 Gold Evidence 格式。
-4. **补小米 OCR 并接 ingest**：`workers/parser/ocr_pdf.py` 离线重跑 3 份小米文档（D11）；再把本地 corpus 接入数据库/索引服务（T1.5）。
+4. **接 ingest**：Xiaomi OCR 已合入 corpus（D11）；下一步把本地 corpus 接入数据库/索引服务（T1.5）。
 5. **接 dense/embedding 与 Agent**：RRF 多通道、引用校验、拒答与 trace（D10/T2.x）。
 
 ---

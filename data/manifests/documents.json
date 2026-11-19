@@ -107,8 +107,8 @@
     "source_file": "xiaomi-2025-ar.pdf",
     "sha256": "ffd733761633f464d90f6829e9b2d3e089f2dee7054b8ebfe91ef617f222da7c",
     "page_count": 415,
-    "text_chars": 294649,
-    "text_quality": "low",
+    "text_chars": 269873,
+    "text_quality": "ocr",
     "license": "user-provided; not redistributed"
   },
   {
@@ -121,8 +121,8 @@
     "source_file": "xiaomi-2025h1.pdf",
     "sha256": "533203be933c6a8ad7e15b7eac157fe9a21e768c0301eeb55fd4e21dee4e42ad",
     "page_count": 127,
-    "text_chars": 86032,
-    "text_quality": "low",
+    "text_chars": 79164,
+    "text_quality": "ocr",
     "license": "user-provided; not redistributed"
   },
   {
@@ -135,8 +135,8 @@
     "source_file": "xiaomi-2026h1.pdf",
     "sha256": "43f7cd0cf82609ef48ded356af616d9b14c6e41a7088865ad9c8c11588da1ada",
     "page_count": 127,
-    "text_chars": 86679,
-    "text_quality": "low",
+    "text_chars": 79695,
+    "text_quality": "ocr",
     "license": "user-provided; not redistributed"
   }
 ]

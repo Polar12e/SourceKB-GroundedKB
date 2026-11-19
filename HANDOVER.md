@@ -27,7 +27,7 @@
 - 四通路通用化：bm25 / expanded / dense / hybrid，由 `config/retrieval.yaml` 驱动；
 - 10 文档本地语料：PDF parser + manifest + 页级 JSONL（美的/腾讯/中芯国际/小米）；
 - 10 题 retrieval eval：Hit@4=1.000 / Recall@4=0.975 / MRR=1.000，与旧 `bm25` 一致；
-- 跨文档 40 题 A/B：修正 Gold 后 hybrid 与 expanded 持平，默认保持 expanded；
+- 跨文档 40 题 A/B：OCR 后 hybrid 0.875 / expanded 0.850，未达 3pp 门槛，默认保持 expanded；
 - 本地端到端切片：gateway /search + /ask → retrieval；agent 抽取式回答/拒答；
 - 契约 v0 草案（13 个 JSON Schema + OpenAPI）；
 - Compose / Dockerfile 骨架（`config` 校验通过，未在会话内运行）；
@@ -36,11 +36,10 @@
 未完成：
 
 - 契约 v0 评审与冻结；
-- Xiaomi 3 份 OCR 重抽取（当前 text_quality=low）；
-- dense / embedding 通道；
 - ingest pipeline（数据库/索引服务）；
-- 跨文档 10 题（腾讯/中芯/小米）；
-- benchmark；
+- 40 题标注复核；
+- LLM 生成、引用校验与完整拒答；
+- benchmark 扩展；
 - Web/API。
 
 接手人应先阅读：
@@ -216,7 +215,7 @@ grounded-kb/
 └─ tests/
 ```
 
-Go/Python 骨架、BM25 检索、10 文档本地语料、10 题 eval 与契约草案已落地；Xiaomi OCR、跨文档题、dense、ingest、Agent 业务与 Compose 运行待补。
+Go/Python 骨架、四通路检索、10 文档语料（含 Xiaomi OCR）、Midea 10 题、跨文档 40 题、本地端到端与契约草案已落地；ingest、LLM 生成、标注复核与 Web 待补。
 
 ---
 
